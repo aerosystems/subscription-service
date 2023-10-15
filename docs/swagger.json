@@ -1,0 +1,30 @@
+{
+    "schemes": [
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "A part of microservice infrastructure, who responsible for user subscriptions",
+        "title": "Subscription Service",
+        "contact": {
+            "name": "Artem Kostenko",
+            "url": "https://github.com/aerosystems"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "host": "gw.verifire.com/subs",
+    "basePath": "/",
+    "paths": {},
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Should contain Access JWT Token, with the Bearer started",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

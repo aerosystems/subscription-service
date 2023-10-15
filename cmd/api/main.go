@@ -5,14 +5,18 @@ import (
 	"github.com/aerosystems/subs-service/internal/handlers"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/repository"
+	RPCServer "github.com/aerosystems/subs-service/internal/rpc_server"
+	"github.com/aerosystems/subs-service/internal/services/subscription"
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
 	"github.com/sirupsen/logrus"
 	"os"
 )
 
-const webPort = 80
-const rpcPort = 5001
+const (
+	webPort = 80
+	rpcPort = 5001
+)
 
 // @title Subscription Service
 // @version 1.0.0
@@ -39,8 +43,10 @@ func main() {
 	clientGORM.AutoMigrate(models.Subscription{})
 
 	subscriptionRepo := repository.NewSubscriptionRepo(clientGORM)
+	subscriptionService := subscription.NewSubsService(subscriptionRepo)
 
-	baseHandler := handlers.NewBaseHandler(subscriptionRepo)
+	baseHandler := handlers.NewBaseHandler(subscriptionService)
+	rpcServer := RPCServer.NewSubsServer(rpcPort, log.Logger, subscriptionService)
 
 	app := Config{
 		BaseHandler: baseHandler,
@@ -54,6 +60,11 @@ func main() {
 	go func() {
 		log.Infof("starting subs-service HTTP server on port %d\n", webPort)
 		errChan <- e.Start(fmt.Sprintf(":%d", webPort))
+	}()
+
+	go func() {
+		log.Infof("starting subs-service RPC server on port %d\n", rpcPort)
+		errChan <- rpcServer.Listen(rpcPort)
 	}()
 
 	for {

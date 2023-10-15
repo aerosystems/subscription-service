@@ -1,19 +1,19 @@
 package handlers
 
 import (
-	"github.com/aerosystems/subs-service/internal/models"
+	"github.com/aerosystems/subs-service/internal/services/subscription"
 	"github.com/labstack/echo/v4"
 	"os"
 	"strings"
 )
 
 type BaseHandler struct {
-	SubscriptionRepo models.SubscriptionRepository
+	SubscriptionService subscription.SubsService
 }
 
-func NewBaseHandler(subscriptionRepo models.SubscriptionRepository) *BaseHandler {
+func NewBaseHandler(subscriptionService subscription.SubsService) *BaseHandler {
 	return &BaseHandler{
-		SubscriptionRepo: subscriptionRepo,
+		SubscriptionService: subscriptionService,
 	}
 }
 

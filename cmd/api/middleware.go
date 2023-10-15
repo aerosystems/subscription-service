@@ -2,8 +2,8 @@ package main
 
 import (
 	"errors"
-	"github.com/aerosystems/lookup-service/internal/handlers"
-	AuthService "github.com/aerosystems/lookup-service/pkg/auth_service"
+	"github.com/aerosystems/subs-service/internal/handlers"
+	AuthService "github.com/aerosystems/subs-service/pkg/auth_service"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -44,8 +44,6 @@ func (app *Config) AuthTokenMiddleware(roles []string) echo.MiddlewareFunc {
 			return handlers.ErrorResponse(c, http.StatusUnauthorized, "invalid token", err)
 		},
 	}
-
-	//return echojwt.WithConfig(AuthorizationConfig)
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
