@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/aerosystems/subs-service/internal/handlers"
+	middleware "github.com/aerosystems/subs-service/internal/middleware"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/repository"
 	RPCServer "github.com/aerosystems/subs-service/internal/rpc_server"
@@ -10,6 +11,7 @@ import (
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
 	"github.com/sirupsen/logrus"
+	"net/rpc"
 	"os"
 )
 
@@ -53,7 +55,7 @@ func main() {
 	}
 
 	e := app.NewRouter()
-	app.AddMiddleware(e, log.Logger)
+	middleware.AddMiddleware(e, log.Logger)
 
 	errChan := make(chan error)
 
@@ -64,6 +66,7 @@ func main() {
 
 	go func() {
 		log.Infof("starting subs-service RPC server on port %d\n", rpcPort)
+		errChan <- rpc.Register(rpcServer)
 		errChan <- rpcServer.Listen(rpcPort)
 	}()
 

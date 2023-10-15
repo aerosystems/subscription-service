@@ -6,6 +6,7 @@ type SubsRPCPayload struct {
 }
 
 func (ss *SubsServer) CreateFreeTrial(payload SubsRPCPayload, resp *string) error {
+	*resp = "ok"
 	return ss.subsService.CreateFreeTrial(payload.UserId, payload.Kind)
 }
 
