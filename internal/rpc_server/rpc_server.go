@@ -5,7 +5,6 @@ import (
 	"github.com/aerosystems/subs-service/internal/services/subscription"
 	"github.com/sirupsen/logrus"
 	"net"
-	"net/rpc"
 )
 
 type SubsServer struct {
