@@ -1,7 +1,7 @@
 package RPCServer
 
 type SubsRPCPayload struct {
-	UserId uint
+	UserId int
 	Kind   string
 }
 
@@ -10,7 +10,7 @@ func (ss *SubsServer) CreateFreeTrial(payload SubsRPCPayload, resp *string) erro
 	return ss.subsService.CreateFreeTrial(payload.UserId, payload.Kind)
 }
 
-func (ss *SubsServer) GetAccessTime(userId uint, resp *uint) error {
+func (ss *SubsServer) GetAccessTime(userId int, resp *int) error {
 	subscription, err := ss.subsService.GetSubscription(userId)
 	if err != nil {
 		return err

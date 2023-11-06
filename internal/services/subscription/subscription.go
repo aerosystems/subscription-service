@@ -5,8 +5,8 @@ import "github.com/aerosystems/subs-service/internal/models"
 const defaultTimeDuration = 60 * 60 * 24 * 14 // 14 days
 
 type SubsService interface {
-	CreateFreeTrial(userId uint, kind string) error
-	GetSubscription(userId uint) (*models.Subscription, error)
+	CreateFreeTrial(userId int, kind string) error
+	GetSubscription(userId int) (*models.Subscription, error)
 }
 
 type SubsServiceImpl struct {
@@ -19,7 +19,7 @@ func NewSubsService(subsRepo models.SubscriptionRepository) *SubsServiceImpl {
 	}
 }
 
-func (ss *SubsServiceImpl) CreateFreeTrial(userId uint, kind string) error {
+func (ss *SubsServiceImpl) CreateFreeTrial(userId int, kind string) error {
 	sub, err := models.NewSubscription(userId, kind, defaultTimeDuration)
 	if err != nil {
 		return err
@@ -27,6 +27,6 @@ func (ss *SubsServiceImpl) CreateFreeTrial(userId uint, kind string) error {
 	return ss.subsRepo.Create(sub)
 }
 
-func (ss *SubsServiceImpl) GetSubscription(userId uint) (*models.Subscription, error) {
+func (ss *SubsServiceImpl) GetSubscription(userId int) (*models.Subscription, error) {
 	return ss.subsRepo.GetByUserId(userId)
 }

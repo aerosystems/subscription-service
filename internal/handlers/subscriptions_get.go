@@ -6,7 +6,7 @@ import (
 )
 
 func (h *BaseHandler) GetSubscriptions(c echo.Context) error {
-	userId := c.Get("userId").(uint)
+	userId := c.Get("userId").(int)
 	subscription, err := h.SubscriptionService.GetSubscription(userId)
 	if err != nil {
 		return ErrorResponse(c, http.StatusInternalServerError, "could not found subscription", err)

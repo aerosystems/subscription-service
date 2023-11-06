@@ -17,7 +17,7 @@ func (r SubscriptionRepo) Create(subscription *models.Subscription) error {
 	return r.db.Create(subscription).Error
 }
 
-func (r SubscriptionRepo) GetByUserId(userId uint) (*models.Subscription, error) {
+func (r SubscriptionRepo) GetByUserId(userId int) (*models.Subscription, error) {
 	var subscriptions *models.Subscription
 	err := r.db.Where("user_id = ?", userId).Find(&subscriptions).Error
 	return subscriptions, err
@@ -27,6 +27,6 @@ func (r SubscriptionRepo) Update(subscription *models.Subscription) error {
 	return r.db.Save(subscription).Error
 }
 
-func (r SubscriptionRepo) Delete(id uint) error {
+func (r SubscriptionRepo) Delete(id int) error {
 	return r.db.Delete(&models.Subscription{}, id).Error
 }

@@ -11,15 +11,15 @@ const (
 )
 
 type Subscription struct {
-	Id         uint             `json:"id"`
+	Id         int              `json:"id"`
 	Kind       KindSubscription `json:"kind"`
-	UserId     uint             `json:"userId"`
-	AccessTime uint             `json:"accessTime"`
+	UserId     int              `json:"userId"`
+	AccessTime int              `json:"accessTime"`
 	CreatedAt  time.Time        `json:"createdAt"`
 	UpdatedAt  time.Time        `json:"updatedAt"`
 }
 
-func NewSubscription(userId uint, kind string, accessTime uint) (*Subscription, error) {
+func NewSubscription(userId int, kind string, accessTime int) (*Subscription, error) {
 	ks := KindSubscription(kind)
 	if ks != Startup && ks != Business {
 		return nil, errors.New("invalid kind of subscription")
@@ -35,7 +35,7 @@ type KindSubscription string
 
 type SubscriptionRepository interface {
 	Create(subscription *Subscription) error
-	GetByUserId(userId uint) (*Subscription, error)
+	GetByUserId(userId int) (*Subscription, error)
 	Update(subscription *Subscription) error
-	Delete(id uint) error
+	Delete(id int) error
 }

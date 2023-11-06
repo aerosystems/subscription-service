@@ -14,9 +14,9 @@ func (app *Config) NewRouter() *echo.Echo {
 	docsGroup.Use(middleware.BasicAuthMiddleware)
 	docsGroup.GET("/*", echoSwagger.WrapHandler)
 
-	e.GET("/v1/subscriptions", app.BaseHandler.GetSubscriptions, middleware.AuthTokenMiddleware([]string{"user", "admin", "support"}))
-	e.POST("/v1/subscriptions", app.BaseHandler.CreateSubscription, middleware.AuthTokenMiddleware([]string{"admin", "support"}))
-	e.PATCH("/v1/subscriptions/:id", app.BaseHandler.UpdateSubscription, middleware.AuthTokenMiddleware([]string{"admin", "support"}))
-	e.DELETE("/v1/subscriptions/:id", app.BaseHandler.DeleteSubscription, middleware.AuthTokenMiddleware([]string{"admin", "support"}))
+	e.GET("/v1/subscriptions", app.BaseHandler.GetSubscriptions, middleware.AuthTokenMiddleware([]string{"user", "staff"}))
+	e.POST("/v1/subscriptions", app.BaseHandler.CreateSubscription, middleware.AuthTokenMiddleware([]string{"staff"}))
+	e.PATCH("/v1/subscriptions/:id", app.BaseHandler.UpdateSubscription, middleware.AuthTokenMiddleware([]string{"staff"}))
+	e.DELETE("/v1/subscriptions/:id", app.BaseHandler.DeleteSubscription, middleware.AuthTokenMiddleware([]string{"staff"}))
 	return e
 }
