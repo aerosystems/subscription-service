@@ -7,7 +7,7 @@ import (
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/repository"
 	RPCServer "github.com/aerosystems/subs-service/internal/rpc_server"
-	"github.com/aerosystems/subs-service/internal/services/subscription"
+	"github.com/aerosystems/subs-service/internal/services"
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
 	"github.com/sirupsen/logrus"
@@ -45,13 +45,14 @@ func main() {
 	clientGORM.AutoMigrate(models.Subscription{})
 
 	subscriptionRepo := repository.NewSubscriptionRepo(clientGORM)
-	subscriptionService := subscription.NewSubsService(subscriptionRepo)
 
-	baseHandler := handlers.NewBaseHandler(subscriptionService)
+	subscriptionService := services.NewSubsService(subscriptionRepo)
+
+	baseHandler := handlers.NewBaseHandler(os.Getenv("APP_ENV"), log.Logger, subscriptionService)
 	rpcServer := RPCServer.NewSubsServer(rpcPort, log.Logger, subscriptionService)
 
 	app := Config{
-		BaseHandler: baseHandler,
+		baseHandler: baseHandler,
 	}
 
 	e := app.NewRouter()

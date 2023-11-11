@@ -18,3 +18,8 @@ func (ss *SubsServer) GetAccessTime(userId int, resp *int) error {
 	*resp = subscription.AccessTime
 	return nil
 }
+
+func (ss *SubsServer) DeleteSubscription(userId int, resp *string) error {
+	*resp = "ok"
+	return ss.subsService.DeleteSubscription(userId)
+}

@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+type KindSubscription string
+
 const (
 	Startup  KindSubscription = "startup"
 	Business KindSubscription = "business"
@@ -13,7 +15,7 @@ const (
 type Subscription struct {
 	Id         int              `json:"id"`
 	Kind       KindSubscription `json:"kind"`
-	UserId     int              `json:"userId"`
+	UserId     int              `json:"userId" gorm:"unique"`
 	AccessTime int              `json:"accessTime"`
 	CreatedAt  time.Time        `json:"createdAt"`
 	UpdatedAt  time.Time        `json:"updatedAt"`
@@ -30,8 +32,6 @@ func NewSubscription(userId int, kind string, accessTime int) (*Subscription, er
 		AccessTime: accessTime,
 	}, nil
 }
-
-type KindSubscription string
 
 type SubscriptionRepository interface {
 	Create(subscription *Subscription) error

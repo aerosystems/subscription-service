@@ -2,21 +2,22 @@ package RPCServer
 
 import (
 	"fmt"
-	"github.com/aerosystems/subs-service/internal/services/subscription"
+	"github.com/aerosystems/subs-service/internal/services"
 	"github.com/sirupsen/logrus"
 	"net"
+	"net/rpc"
 )
 
 type SubsServer struct {
 	rpcPort     int
 	log         *logrus.Logger
-	subsService subscription.SubsService
+	subsService services.SubsService
 }
 
 func NewSubsServer(
 	rpcPort int,
 	log *logrus.Logger,
-	subsService subscription.SubsService,
+	subsService services.SubsService,
 ) *SubsServer {
 	return &SubsServer{
 		rpcPort:     rpcPort,
