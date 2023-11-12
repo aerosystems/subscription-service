@@ -2,8 +2,7 @@ package middleware
 
 import (
 	"errors"
-	"github.com/aerosystems/subs-service/internal/handlers"
-	"github.com/aerosystems/subs-service/internal/services/token"
+	"github.com/aerosystems/subs-service/internal/services"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -17,7 +16,7 @@ func AuthTokenMiddleware(roles []string) echo.MiddlewareFunc {
 		SigningKey:     []byte(os.Getenv("ACCESS_SECRET")),
 		ParseTokenFunc: parseToken,
 		ErrorHandler: func(c echo.Context, err error) error {
-			return handlers.ErrorResponse(c, http.StatusUnauthorized, "invalid token", err)
+			return echo.NewHTTPError(http.StatusUnauthorized, "invalid token")
 		},
 	}
 
@@ -36,7 +35,7 @@ func AuthTokenMiddleware(roles []string) echo.MiddlewareFunc {
 
 			token := tokenParts[1]
 
-			accessTokenClaims, err := TokenService.DecodeAccessToken(token)
+			accessTokenClaims, err := services.DecodeAccessToken(token)
 			if err != nil {
 				return AuthorizationConfig.ErrorHandler(c, err)
 			}
@@ -56,7 +55,7 @@ func AuthTokenMiddleware(roles []string) echo.MiddlewareFunc {
 
 			if !roleFound {
 				// Якщо userRole не входить у roles, повертаємо помилку 403
-				return handlers.ErrorResponse(c, http.StatusForbidden, "forbidden", errors.New("userRole not allowed"))
+				return echo.NewHTTPError(http.StatusForbidden, "access denied")
 			}
 
 			return next(c)
@@ -66,7 +65,7 @@ func AuthTokenMiddleware(roles []string) echo.MiddlewareFunc {
 
 func parseToken(c echo.Context, auth string) (interface{}, error) {
 	_ = c
-	accessTokenClaims, err := TokenService.DecodeAccessToken(auth)
+	accessTokenClaims, err := services.DecodeAccessToken(auth)
 	if err != nil {
 		return nil, err
 	}
