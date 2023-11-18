@@ -1,25 +1,33 @@
 package RPCServer
 
+import (
+	"github.com/aerosystems/subs-service/internal/models"
+	"github.com/google/uuid"
+	"time"
+)
+
 type SubsRPCPayload struct {
-	UserId int
-	Kind   string
+	UserUuid   uuid.UUID
+	Kind       models.KindSubscription
+	AccessTime time.Time
 }
 
 func (ss *SubsServer) CreateFreeTrial(payload SubsRPCPayload, resp *string) error {
 	*resp = "ok"
-	return ss.subsService.CreateFreeTrial(payload.UserId, payload.Kind)
+	return ss.subsService.CreateFreeTrial(payload.UserUuid, payload.Kind)
 }
 
-func (ss *SubsServer) GetAccessTime(userId int, resp *int) error {
-	subscription, err := ss.subsService.GetSubscription(userId)
+func (ss *SubsServer) GetSubscription(userUuid uuid.UUID, resp *SubsRPCPayload) error {
+	sub, err := ss.subsService.GetSubscription(userUuid)
 	if err != nil {
 		return err
 	}
-	*resp = subscription.AccessTime
+	resp.Kind = sub.Kind
+	resp.AccessTime = sub.AccessTime
 	return nil
 }
 
-func (ss *SubsServer) DeleteSubscription(userId int, resp *string) error {
+func (ss *SubsServer) DeleteSubscription(userUuid uuid.UUID, resp *string) error {
 	*resp = "ok"
-	return ss.subsService.DeleteSubscription(userId)
+	return ss.subsService.DeleteSubscription(userUuid)
 }

@@ -1,41 +1,30 @@
 package models
 
 import (
-	"errors"
+	"github.com/google/uuid"
 	"time"
 )
 
-type KindSubscription string
-
-const (
-	Startup  KindSubscription = "startup"
-	Business KindSubscription = "business"
-)
-
 type Subscription struct {
-	Id         int              `json:"id"`
+	Id         int              `json:"id" gorm:"primaryKey;autoIncrement"`
+	UserUuid   uuid.UUID        `json:"userUuid" gorm:"unique"`
 	Kind       KindSubscription `json:"kind"`
-	UserId     int              `json:"userId" gorm:"unique"`
-	AccessTime int              `json:"accessTime"`
+	AccessTime time.Time        `json:"accessTime"`
 	CreatedAt  time.Time        `json:"createdAt"`
 	UpdatedAt  time.Time        `json:"updatedAt"`
 }
 
-func NewSubscription(userId int, kind string, accessTime int) (*Subscription, error) {
-	ks := KindSubscription(kind)
-	if ks != Startup && ks != Business {
-		return nil, errors.New("invalid kind of subscription")
-	}
+func NewSubscription(userUuid uuid.UUID, kind KindSubscription, accessTime time.Time) (*Subscription, error) {
 	return &Subscription{
-		UserId:     userId,
-		Kind:       ks,
+		UserUuid:   userUuid,
+		Kind:       kind,
 		AccessTime: accessTime,
 	}, nil
 }
 
 type SubscriptionRepository interface {
 	Create(subscription *Subscription) error
-	GetByUserId(userId int) (*Subscription, error)
+	GetByUserUuid(userUuid uuid.UUID) (*Subscription, error)
 	Update(subscription *Subscription) error
-	Delete(id int) error
+	Delete(subscription *Subscription) error
 }
