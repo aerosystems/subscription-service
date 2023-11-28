@@ -24,11 +24,16 @@ func NewSubsService(subsRepo models.SubscriptionRepository) *SubsServiceImpl {
 	}
 }
 
-func (ss *SubsServiceImpl) CreateFreeTrial(userUuid uuid.UUID, kind models.KindSubscription) error {
-	sub, err := models.NewSubscription(userUuid, kind, time.Now().Add(time.Second*defaultTimeDuration))
-	if err != nil {
-		return err
+func NewSubscription(userUuid uuid.UUID, kind models.KindSubscription, accessTime time.Time) *models.Subscription {
+	return &models.Subscription{
+		UserUuid:   userUuid,
+		Kind:       kind,
+		AccessTime: accessTime,
 	}
+}
+
+func (ss *SubsServiceImpl) CreateFreeTrial(userUuid uuid.UUID, kind models.KindSubscription) error {
+	sub := NewSubscription(userUuid, kind, time.Now().Add(time.Second*defaultTimeDuration))
 	return ss.subsRepo.Create(sub)
 }
 

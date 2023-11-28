@@ -7,19 +7,11 @@ import (
 
 type Subscription struct {
 	Id         int              `json:"id" gorm:"primaryKey;autoIncrement"`
-	UserUuid   uuid.UUID        `json:"userUuid" gorm:"unique"`
+	UserUuid   uuid.UUID        `json:"-" gorm:"unique"`
 	Kind       KindSubscription `json:"kind"`
 	AccessTime time.Time        `json:"accessTime"`
 	CreatedAt  time.Time        `json:"createdAt"`
 	UpdatedAt  time.Time        `json:"updatedAt"`
-}
-
-func NewSubscription(userUuid uuid.UUID, kind KindSubscription, accessTime time.Time) (*Subscription, error) {
-	return &Subscription{
-		UserUuid:   userUuid,
-		Kind:       kind,
-		AccessTime: accessTime,
-	}, nil
 }
 
 type SubscriptionRepository interface {

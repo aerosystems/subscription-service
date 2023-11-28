@@ -1,17 +1,15 @@
 package handlers
 
 import (
+	"github.com/aerosystems/subs-service/internal/services"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 func (h *BaseHandler) GetSubscriptions(c echo.Context) error {
-	userUuid, err := uuid.Parse(c.Get("userUuid").(string))
-	if err != nil {
-		return h.ErrorResponse(c, http.StatusBadRequest, "invalid user uuid", err)
-	}
-	subscription, err := h.subscriptionService.GetSubscription(userUuid)
+	accessTokenClaims := c.Get("accessTokenClaims").(*services.AccessTokenClaims)
+	subscription, err := h.subscriptionService.GetSubscription(uuid.MustParse(accessTokenClaims.UserUuid))
 	if err != nil {
 		return h.ErrorResponse(c, http.StatusInternalServerError, "could not found subscription", err)
 	}
