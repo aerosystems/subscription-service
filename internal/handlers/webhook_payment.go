@@ -5,6 +5,6 @@ import (
 	"net/http"
 )
 
-func (h *BaseHandler) CreateSubscription(c echo.Context) error {
+func (h *BaseHandler) WebhookPayment(c echo.Context) error {
 	return c.JSON(http.StatusNotImplemented, "not implemented")
 }

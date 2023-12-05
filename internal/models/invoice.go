@@ -1,10 +1,24 @@
 package models
 
-import "time"
+import (
+	"github.com/google/uuid"
+	"time"
+)
 
 type Invoice struct {
-	Id        int       `json:"id"`
-	Amount    int       `json:"amount"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Id            int           `json:"id"`
+	Amount        int           `json:"amount"`
+	UserUuid      uuid.UUID     `json:"userUuid"`
+	PaymentMethod PaymentMethod `json:"paymentMethod"`
+	CreatedAt     time.Time     `json:"createdAtt"`
+	UpdatedAt     time.Time     `json:"updatedAt"`
+}
+
+type InvoiceRepository interface {
+	Create(invoice *Invoice) error
+	GetByUserUuid(userUuid uuid.UUID) (*Invoice, error)
+	GetById(id int) (*Invoice, error)
+	GetAll() ([]*Invoice, error)
+	Update(invoice *Invoice) error
+	Delete(invoice *Invoice) error
 }

@@ -15,3 +15,15 @@ func (h *BaseHandler) GetSubscriptions(c echo.Context) error {
 	}
 	return h.SuccessResponse(c, http.StatusOK, "subscription successfully found", subscription)
 }
+
+func (h *BaseHandler) CreateSubscription(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "not implemented")
+}
+
+func (h *BaseHandler) UpdateSubscription(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "not implemented")
+}
+
+func (h *BaseHandler) DeleteSubscription(c echo.Context) error {
+	return c.JSON(http.StatusNotImplemented, "not implemented")
+}

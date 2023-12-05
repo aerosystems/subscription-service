@@ -5,6 +5,6 @@ import (
 	"net/http"
 )
 
-func (h *BaseHandler) DeleteSubscription(c echo.Context) error {
+func (h *BaseHandler) CreateInvoice(c echo.Context) error {
 	return c.JSON(http.StatusNotImplemented, "not implemented")
 }
