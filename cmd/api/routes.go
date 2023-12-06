@@ -19,7 +19,7 @@ func (app *Config) NewRouter() *echo.Echo {
 	e.PATCH("/v1/subscriptions/:id", app.baseHandler.UpdateSubscription, app.oauthMiddleware.AuthTokenMiddleware(models.StaffRole))
 	e.DELETE("/v1/subscriptions/:id", app.baseHandler.DeleteSubscription, app.oauthMiddleware.AuthTokenMiddleware(models.StaffRole))
 
-	e.POST("/v1/invoices", app.baseHandler.CreateInvoice, app.oauthMiddleware.AuthTokenMiddleware(models.CustomerRole))
+	e.POST("/v1/invoices/:payment_method", app.baseHandler.CreateInvoice, app.oauthMiddleware.AuthTokenMiddleware(models.CustomerRole))
 
 	e.POST("/v1/webhooks/:payment_method", app.baseHandler.WebhookPayment)
 	return e

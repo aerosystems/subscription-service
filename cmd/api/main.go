@@ -10,6 +10,7 @@ import (
 	"github.com/aerosystems/subs-service/internal/services"
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
+	"github.com/aerosystems/subs-service/pkg/monobank"
 	"github.com/sirupsen/logrus"
 	"net/rpc"
 	"os"
@@ -44,11 +45,15 @@ func main() {
 	clientGORM := GormPostgres.NewClient(logrus.NewEntry(log.Logger))
 	clientGORM.AutoMigrate(models.Subscription{})
 
+	clientMonobank := monobank.NewClient(os.Getenv("MONOBANK_X_TOKEN"))
+
 	subscriptionRepo := repository.NewSubscriptionRepo(clientGORM)
+	subscriptionService := services.NewSubsServiceImpl(subscriptionRepo)
 
-	subscriptionService := services.NewSubsService(subscriptionRepo)
+	invoiceRepo := repository.NewInvoiceRepo(clientGORM)
+	paymentService := services.NewPaymentServiceImpl(invoiceRepo, clientMonobank)
 
-	baseHandler := handlers.NewBaseHandler(os.Getenv("APP_ENV"), log.Logger, subscriptionService)
+	baseHandler := handlers.NewBaseHandler(os.Getenv("APP_ENV"), log.Logger, subscriptionService, paymentService)
 	rpcServer := RPCServer.NewSubsServer(rpcPort, log.Logger, subscriptionService)
 
 	accessTokenService := services.NewAccessTokenServiceImpl(os.Getenv("ACCESS_SECRET"))

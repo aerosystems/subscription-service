@@ -16,9 +16,8 @@ type Invoice struct {
 
 type InvoiceRepository interface {
 	Create(invoice *Invoice) error
-	GetByUserUuid(userUuid uuid.UUID) (*Invoice, error)
+	GetByUserUuid(userUuid uuid.UUID) ([]Invoice, error)
 	GetById(id int) (*Invoice, error)
-	GetAll() ([]*Invoice, error)
 	Update(invoice *Invoice) error
 	Delete(invoice *Invoice) error
 }

@@ -18,7 +18,7 @@ type SubsServiceImpl struct {
 	subsRepo models.SubscriptionRepository
 }
 
-func NewSubsService(subsRepo models.SubscriptionRepository) *SubsServiceImpl {
+func NewSubsServiceImpl(subsRepo models.SubscriptionRepository) *SubsServiceImpl {
 	return &SubsServiceImpl{
 		subsRepo: subsRepo,
 	}
