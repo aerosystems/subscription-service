@@ -83,5 +83,4 @@ func (c *Client) CreateInvoice(invoice *Invoice) (*InvoiceData, error) {
 		return nil, err
 	}
 	return &response, nil
-
 }

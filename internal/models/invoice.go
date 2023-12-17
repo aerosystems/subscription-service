@@ -13,11 +13,3 @@ type Invoice struct {
 	CreatedAt     time.Time     `json:"createdAtt"`
 	UpdatedAt     time.Time     `json:"updatedAt"`
 }
-
-type InvoiceRepository interface {
-	Create(invoice *Invoice) error
-	GetByUserUuid(userUuid uuid.UUID) ([]Invoice, error)
-	GetById(id int) (*Invoice, error)
-	Update(invoice *Invoice) error
-	Delete(invoice *Invoice) error
-}

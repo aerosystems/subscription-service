@@ -13,10 +13,3 @@ type Subscription struct {
 	CreatedAt  time.Time        `json:"createdAt"`
 	UpdatedAt  time.Time        `json:"updatedAt"`
 }
-
-type SubscriptionRepository interface {
-	Create(subscription *Subscription) error
-	GetByUserUuid(userUuid uuid.UUID) (*Subscription, error)
-	Update(subscription *Subscription) error
-	Delete(subscription *Subscription) error
-}

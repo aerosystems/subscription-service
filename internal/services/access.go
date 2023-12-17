@@ -12,11 +12,6 @@ type AccessTokenClaims struct {
 	jwt.StandardClaims
 }
 
-type TokenService interface {
-	GetAccessSecret() string
-	DecodeAccessToken(tokenString string) (*AccessTokenClaims, error)
-}
-
 type AccessTokenServiceImpl struct {
 	accessSecret string
 }

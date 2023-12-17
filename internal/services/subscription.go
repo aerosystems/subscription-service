@@ -2,23 +2,18 @@ package services
 
 import (
 	"github.com/aerosystems/subs-service/internal/models"
+	"github.com/aerosystems/subs-service/internal/repository"
 	"github.com/google/uuid"
 	"time"
 )
 
 const defaultTimeDuration = 60 * 60 * 24 * 14 // 14 days
 
-type SubsService interface {
-	CreateFreeTrial(userUuid uuid.UUID, kind models.KindSubscription) error
-	GetSubscription(userUuid uuid.UUID) (*models.Subscription, error)
-	DeleteSubscription(userUuid uuid.UUID) error
-}
-
 type SubsServiceImpl struct {
-	subsRepo models.SubscriptionRepository
+	subsRepo repository.SubscriptionRepository
 }
 
-func NewSubsServiceImpl(subsRepo models.SubscriptionRepository) *SubsServiceImpl {
+func NewSubsServiceImpl(subsRepo repository.SubscriptionRepository) *SubsServiceImpl {
 	return &SubsServiceImpl{
 		subsRepo: subsRepo,
 	}
