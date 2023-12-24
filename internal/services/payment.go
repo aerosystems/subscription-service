@@ -4,6 +4,7 @@ import (
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/repository"
 	"github.com/aerosystems/subs-service/pkg/monobank"
+	"github.com/google/uuid"
 )
 
 type PaymentServiceImpl struct {
@@ -27,13 +28,21 @@ func (ps *PaymentServiceImpl) SetPaymentMethod(paymentMethod string) error {
 	return nil
 }
 
-func (ps *PaymentServiceImpl) CreateInvoice(invoice *models.Invoice) error {
+func (ps *PaymentServiceImpl) CreateInvoice(userUuid uuid.UUID, amount int) (*models.Invoice, error) {
+	invoice := &models.Invoice{
+		UserUuid:      userUuid,
+		Amount:        amount,
+		PaymentMethod: ps.paymentMethod,
+	}
 	monoInvoice := &monobank.Invoice{
-		Amount: invoice.Amount,
+		Amount: amount,
 	}
 	_, err := ps.monobankClient.CreateInvoice(monoInvoice)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	if err := ps.invoiceRepo.Create(invoice); err != nil {
+		return nil, err
+	}
+	return invoice, nil
 }

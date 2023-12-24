@@ -18,5 +18,5 @@ type SubsService interface {
 
 type PaymentService interface {
 	SetPaymentMethod(paymentMethod string) error
-	CreateInvoice(invoice *models.Invoice) error
+	CreateInvoice(userUuid uuid.UUID, amount int) (*models.Invoice, error)
 }

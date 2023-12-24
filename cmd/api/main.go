@@ -8,9 +8,11 @@ import (
 	"github.com/aerosystems/subs-service/internal/repository"
 	RPCServer "github.com/aerosystems/subs-service/internal/rpc_server"
 	"github.com/aerosystems/subs-service/internal/services"
+	"github.com/aerosystems/subs-service/internal/validators"
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
 	"github.com/aerosystems/subs-service/pkg/monobank"
+	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"net/rpc"
 	"os"
@@ -65,6 +67,9 @@ func main() {
 
 	e := app.NewRouter()
 	middleware.AddLog(e, log.Logger)
+
+	validator := validator.New()
+	e.Validator = &validators.CustomValidator{Validator: validator}
 
 	errChan := make(chan error)
 
