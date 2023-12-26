@@ -53,7 +53,8 @@ func main() {
 	subscriptionService := services.NewSubsServiceImpl(subscriptionRepo)
 
 	invoiceRepo := repository.NewInvoiceRepo(clientGORM)
-	paymentService := services.NewPaymentServiceImpl(invoiceRepo, clientMonobank)
+	priceRepo := repository.NewPriceRepo()
+	paymentService := services.NewPaymentServiceImpl(invoiceRepo, priceRepo, clientMonobank)
 
 	baseHandler := handlers.NewBaseHandler(os.Getenv("APP_ENV"), log.Logger, subscriptionService, paymentService)
 	rpcServer := RPCServer.NewSubsServer(rpcPort, log.Logger, subscriptionService)

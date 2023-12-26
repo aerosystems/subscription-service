@@ -10,12 +10,14 @@ import (
 type PaymentServiceImpl struct {
 	paymentMethod  models.PaymentMethod
 	invoiceRepo    repository.InvoiceRepository
+	priceRepo      repository.PriceRepository
 	monobankClient *monobank.Client
 }
 
-func NewPaymentServiceImpl(invoiceRepo repository.InvoiceRepository, monobankClient *monobank.Client) *PaymentServiceImpl {
+func NewPaymentServiceImpl(invoiceRepo repository.InvoiceRepository, priceRepo repository.PriceRepository, monobankClient *monobank.Client) *PaymentServiceImpl {
 	return &PaymentServiceImpl{
 		invoiceRepo:    invoiceRepo,
+		priceRepo:      priceRepo,
 		monobankClient: monobankClient,
 	}
 }
@@ -45,4 +47,8 @@ func (ps *PaymentServiceImpl) CreateInvoice(userUuid uuid.UUID, amount int) (*mo
 		return nil, err
 	}
 	return invoice, nil
+}
+
+func (ps *PaymentServiceImpl) GetPrice(kindSubscription, durationSubscription string) (int, error) {
+	return ps.priceRepo.GetPrice(kindSubscription, durationSubscription)
 }

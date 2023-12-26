@@ -19,3 +19,7 @@ type SubscriptionRepository interface {
 	Update(subscription *models.Subscription) error
 	Delete(subscription *models.Subscription) error
 }
+
+type PriceRepository interface {
+	GetPrice(kindSubscription models.KindSubscription, durationSubscription models.DurationSubscription) (int, error)
+}
