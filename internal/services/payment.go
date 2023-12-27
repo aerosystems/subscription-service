@@ -7,6 +7,10 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	defaultCcy = 840 // USD
+)
+
 type PaymentServiceImpl struct {
 	paymentMethod  models.PaymentMethod
 	invoiceRepo    repository.InvoiceRepository
@@ -30,18 +34,22 @@ func (ps *PaymentServiceImpl) SetPaymentMethod(paymentMethod string) error {
 	return nil
 }
 
-func (ps *PaymentServiceImpl) CreateInvoice(userUuid uuid.UUID, amount int) (*models.Invoice, error) {
+func (ps *PaymentServiceImpl) CreateInvoice(userUuid uuid.UUID, subscription models.KindSubscription, duration models.DurationSubscription) (*models.Invoice, error) {
+	amount, err := ps.priceRepo.GetPrice(subscription, duration)
+	if err != nil {
+		return nil, err
+	}
+	monoInvoice := &monobank.Invoice{
+		Amount: amount,
+		Ccy:    defaultCcy,
+	}
+	if _, err := ps.monobankClient.CreateInvoice(monoInvoice); err != nil {
+		return nil, err
+	}
 	invoice := &models.Invoice{
 		UserUuid:      userUuid,
 		Amount:        amount,
 		PaymentMethod: ps.paymentMethod,
-	}
-	monoInvoice := &monobank.Invoice{
-		Amount: amount,
-	}
-	_, err := ps.monobankClient.CreateInvoice(monoInvoice)
-	if err != nil {
-		return nil, err
 	}
 	if err := ps.invoiceRepo.Create(invoice); err != nil {
 		return nil, err
@@ -49,6 +57,6 @@ func (ps *PaymentServiceImpl) CreateInvoice(userUuid uuid.UUID, amount int) (*mo
 	return invoice, nil
 }
 
-func (ps *PaymentServiceImpl) GetPrice(kindSubscription, durationSubscription string) (int, error) {
+func (ps *PaymentServiceImpl) GetPrice(kindSubscription models.KindSubscription, durationSubscription models.DurationSubscription) (int, error) {
 	return ps.priceRepo.GetPrice(kindSubscription, durationSubscription)
 }

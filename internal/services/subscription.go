@@ -42,5 +42,4 @@ func (ss *SubsServiceImpl) DeleteSubscription(userUuid uuid.UUID) error {
 		return err
 	}
 	return ss.subsRepo.Delete(sub)
-
 }

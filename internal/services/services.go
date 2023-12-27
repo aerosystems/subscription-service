@@ -19,5 +19,5 @@ type SubsService interface {
 type PaymentService interface {
 	GetPrice(kindSubscription, durationSubscription string) (int, error)
 	SetPaymentMethod(paymentMethod string) error
-	CreateInvoice(userUuid uuid.UUID, amount int) (*models.Invoice, error)
+	CreateInvoice(userUuid uuid.UUID, subscription models.KindSubscription, duration models.DurationSubscription) (*models.Invoice, error)
 }
