@@ -10,12 +10,14 @@ import (
 const defaultTimeDuration = 60 * 60 * 24 * 14 // 14 days
 
 type SubsServiceImpl struct {
-	subsRepo repository.SubscriptionRepository
+	subsRepo  repository.SubscriptionRepository
+	priceRepo repository.PriceRepository
 }
 
-func NewSubsServiceImpl(subsRepo repository.SubscriptionRepository) *SubsServiceImpl {
+func NewSubsServiceImpl(subsRepo repository.SubscriptionRepository, priceRepo repository.PriceRepository) *SubsServiceImpl {
 	return &SubsServiceImpl{
-		subsRepo: subsRepo,
+		subsRepo:  subsRepo,
+		priceRepo: priceRepo,
 	}
 }
 
@@ -25,6 +27,10 @@ func NewSubscription(userUuid uuid.UUID, kind models.KindSubscription, accessTim
 		Kind:       kind,
 		AccessTime: accessTime,
 	}
+}
+
+func (ss *SubsServiceImpl) GetPrices() map[models.KindSubscription]map[models.DurationSubscription]int {
+	return ss.priceRepo.GetAll()
 }
 
 func (ss *SubsServiceImpl) CreateFreeTrial(userUuid uuid.UUID, kind models.KindSubscription) error {

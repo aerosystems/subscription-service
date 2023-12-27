@@ -8,7 +8,9 @@ import (
 )
 
 const (
-	defaultCcy = 840 // USD
+	defaultCcy  = 840 // USD
+	redirectUrl = "https://verifire.app/payment/success"
+	webHookUrl  = "https://gw.verifire.app/subs/v1/webhook/monobank"
 )
 
 type PaymentServiceImpl struct {
@@ -34,29 +36,30 @@ func (ps *PaymentServiceImpl) SetPaymentMethod(paymentMethod string) error {
 	return nil
 }
 
-func (ps *PaymentServiceImpl) CreateInvoice(userUuid uuid.UUID, subscription models.KindSubscription, duration models.DurationSubscription) (*models.Invoice, error) {
+func (ps *PaymentServiceImpl) GetPaymentUrl(userUuid uuid.UUID, subscription models.KindSubscription, duration models.DurationSubscription) (string, error) {
 	amount, err := ps.priceRepo.GetPrice(subscription, duration)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	monoInvoice := &monobank.Invoice{
-		Amount: amount,
-		Ccy:    defaultCcy,
+		Amount:      amount,
+		Ccy:         defaultCcy,
+		RedirectURL: redirectUrl,
+		WebHookURL:  webHookUrl,
 	}
-	if _, err := ps.monobankClient.CreateInvoice(monoInvoice); err != nil {
-		return nil, err
+	result, err := ps.monobankClient.CreateInvoice(monoInvoice)
+	if err != nil {
+		return "", err
 	}
 	invoice := &models.Invoice{
-		UserUuid:      userUuid,
-		Amount:        amount,
-		PaymentMethod: ps.paymentMethod,
+		UserUuid:           userUuid,
+		Amount:             amount,
+		PaymentMethod:      ps.paymentMethod,
+		PaymentStatus:      models.PaymentStatusCreated,
+		AcquiringInvoiceId: result.InvoiceId,
 	}
 	if err := ps.invoiceRepo.Create(invoice); err != nil {
-		return nil, err
+		return "", err
 	}
-	return invoice, nil
-}
-
-func (ps *PaymentServiceImpl) GetPrice(kindSubscription models.KindSubscription, durationSubscription models.DurationSubscription) (int, error) {
-	return ps.priceRepo.GetPrice(kindSubscription, durationSubscription)
+	return result.PageUrl, nil
 }

@@ -49,11 +49,12 @@ func main() {
 
 	clientMonobank := monobank.NewClient(os.Getenv("MONOBANK_X_TOKEN"))
 
+	priceRepo := repository.NewPriceRepo()
+
 	subscriptionRepo := repository.NewSubscriptionRepo(clientGORM)
-	subscriptionService := services.NewSubsServiceImpl(subscriptionRepo)
+	subscriptionService := services.NewSubsServiceImpl(subscriptionRepo, priceRepo)
 
 	invoiceRepo := repository.NewInvoiceRepo(clientGORM)
-	priceRepo := repository.NewPriceRepo()
 	paymentService := services.NewPaymentServiceImpl(invoiceRepo, priceRepo, clientMonobank)
 
 	baseHandler := handlers.NewBaseHandler(os.Getenv("APP_ENV"), log.Logger, subscriptionService, paymentService)

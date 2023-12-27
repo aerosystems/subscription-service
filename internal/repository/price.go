@@ -31,3 +31,7 @@ func (pr *PriceRepo) GetPrice(kindSubscription models.KindSubscription, duration
 	}
 	return price, nil
 }
+
+func (pr *PriceRepo) GetAll() map[models.KindSubscription]map[models.DurationSubscription]int {
+	return pr.priceMap
+}

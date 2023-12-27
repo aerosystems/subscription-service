@@ -1,4 +1,64 @@
 basePath: /
+definitions:
+  handlers.InvoiceRequest:
+    properties:
+      durationSubscription:
+        allOf:
+        - $ref: '#/definitions/models.DurationSubscription'
+        example: 12m
+      kindSubscription:
+        allOf:
+        - $ref: '#/definitions/models.KindSubscription'
+        example: business
+    required:
+    - durationSubscription
+    - kindSubscription
+    type: object
+  handlers.InvoiceResponse:
+    properties:
+      paymentUrl:
+        example: https://api.monobank.ua
+        type: string
+    type: object
+  handlers.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+    type: object
+  models.DurationSubscription:
+    enum:
+    - 1m
+    - 12m
+    type: string
+    x-enum-varnames:
+    - OneMonthDurationSubscription
+    - TwelveMonthDurationSubscription
+  models.KindSubscription:
+    enum:
+    - trial
+    - startup
+    - business
+    type: string
+    x-enum-varnames:
+    - TrialSubscription
+    - StartupSubscription
+    - BusinessSubscription
+  models.Subscription:
+    properties:
+      accessTime:
+        type: string
+      createdAt:
+        type: string
+      duration:
+        $ref: '#/definitions/models.DurationSubscription'
+      id:
+        type: integer
+      kind:
+        $ref: '#/definitions/models.KindSubscription'
+      updatedAt:
+        type: string
+    type: object
 host: gw.verifire.com/subs
 info:
   contact:
@@ -10,7 +70,117 @@ info:
     url: https://www.apache.org/licenses/LICENSE-2.0.html
   title: Subscription Service
   version: 1.0.0
-paths: {}
+paths:
+  /v1/invoices/{payment_method}:
+    post:
+      consumes:
+      - application/json
+      description: Create invoice by payment method
+      parameters:
+      - description: payment method
+        enum:
+        - monobank
+        in: path
+        name: payment_method
+        required: true
+        type: string
+      - description: invoice
+        in: body
+        name: invoice
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.InvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.InvoiceResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Create invoice
+      tags:
+      - invoices
+  /v1/prices:
+    get:
+      consumes:
+      - application/json
+      description: get prices for all available subscriptions, in cents
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.Response'
+            - properties:
+                data:
+                  additionalProperties:
+                    additionalProperties:
+                      type: integer
+                    type: object
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      summary: Get prices
+      tags:
+      - prices
+  /v1/subscriptions:
+    get:
+      consumes:
+      - application/json
+      description: get subscriptions by userUuid
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Subscription'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Get subscriptions
+      tags:
+      - subscriptions
 schemes:
 - https
 securityDefinitions:

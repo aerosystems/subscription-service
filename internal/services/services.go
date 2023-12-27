@@ -11,13 +11,13 @@ type TokenService interface {
 }
 
 type SubsService interface {
+	GetPrices() map[models.KindSubscription]map[models.DurationSubscription]int
 	CreateFreeTrial(userUuid uuid.UUID, kind models.KindSubscription) error
 	GetSubscription(userUuid uuid.UUID) (*models.Subscription, error)
 	DeleteSubscription(userUuid uuid.UUID) error
 }
 
 type PaymentService interface {
-	GetPrice(kindSubscription, durationSubscription string) (int, error)
 	SetPaymentMethod(paymentMethod string) error
-	CreateInvoice(userUuid uuid.UUID, subscription models.KindSubscription, duration models.DurationSubscription) (*models.Invoice, error)
+	GetPaymentUrl(userUuid uuid.UUID, subscription models.KindSubscription, duration models.DurationSubscription) (string, error)
 }

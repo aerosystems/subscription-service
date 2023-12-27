@@ -14,6 +14,8 @@ func (app *Config) NewRouter() *echo.Echo {
 	docsGroup.Use(app.basicAuthMiddleware.BasicAuthMiddleware)
 	docsGroup.GET("/*", echoSwagger.WrapHandler)
 
+	e.GET("/v1/prices", app.baseHandler.GetPrices)
+
 	e.GET("/v1/subscriptions", app.baseHandler.GetSubscriptions, app.oauthMiddleware.AuthTokenMiddleware(models.CustomerRole))
 	e.POST("/v1/subscriptions", app.baseHandler.CreateSubscription, app.oauthMiddleware.AuthTokenMiddleware(models.CustomerRole))
 	e.PATCH("/v1/subscriptions/:id", app.baseHandler.UpdateSubscription, app.oauthMiddleware.AuthTokenMiddleware(models.StaffRole))
@@ -21,6 +23,6 @@ func (app *Config) NewRouter() *echo.Echo {
 
 	e.POST("/v1/invoices/:payment_method", app.baseHandler.CreateInvoice, app.oauthMiddleware.AuthTokenMiddleware(models.CustomerRole))
 
-	e.POST("/v1/webhooks/:payment_method", app.baseHandler.WebhookPayment)
+	e.POST("/v1/webhook/:payment_method", app.baseHandler.WebhookPayment)
 	return e
 }

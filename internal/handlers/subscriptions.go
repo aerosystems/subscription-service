@@ -7,11 +7,22 @@ import (
 	"net/http"
 )
 
+// GetSubscriptions godoc
+// @Summary Get subscriptions
+// @Description get subscriptions by userUuid
+// @Tags subscriptions
+// @Accept  json
+// @Produce  json
+// @Security ApiKeyAuth
+// @Success 200 {object} Response{data=models.Subscription}
+// @Failure 401 {object} Response
+// @Failure 500 {object} Response
+// @Router /v1/subscriptions [get]
 func (h *BaseHandler) GetSubscriptions(c echo.Context) error {
 	accessTokenClaims := c.Get("accessTokenClaims").(*services.AccessTokenClaims)
 	subscription, err := h.subscriptionService.GetSubscription(uuid.MustParse(accessTokenClaims.UserUuid))
 	if err != nil {
-		return h.ErrorResponse(c, http.StatusInternalServerError, "could not found subscription", err)
+		return h.ErrorResponse(c, http.StatusInternalServerError, "could not find subscription", err)
 	}
 	return h.SuccessResponse(c, http.StatusOK, "subscription successfully found", subscription)
 }
