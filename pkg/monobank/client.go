@@ -1,7 +1,9 @@
 package monobank
 
-type SDK interface {
-	CreateInvoice(request *Invoice) error
+type MonoClient interface {
+	CreateInvoice(invoice *Invoice) (*InvoiceData, error)
+	CheckWebhookSignature(bodyBytes []byte, xSignBase64 string) error
+	GetWebhookFromRequest(bodyBytes []byte) (*Webhook, error)
 }
 
 type Client struct {

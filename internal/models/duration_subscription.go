@@ -3,8 +3,8 @@ package models
 type DurationSubscription string
 
 const (
-	OneMonthDurationSubscription    DurationSubscription = "1m"
-	TwelveMonthDurationSubscription DurationSubscription = "12m"
+	OneMonthDurationSubscription    DurationSubscription = "monthly"
+	TwelveMonthDurationSubscription DurationSubscription = "annually"
 )
 
 func (d DurationSubscription) String() string {

@@ -10,7 +10,7 @@ import (
 
 type InvoiceRequest struct {
 	KindSubscription     models.KindSubscription     `json:"kindSubscription" validate:"required" example:"business"`
-	DurationSubscription models.DurationSubscription `json:"durationSubscription" validate:"required" example:"12m"`
+	DurationSubscription models.DurationSubscription `json:"durationSubscription" validate:"required" example:"annually"`
 }
 
 type InvoiceResponse struct {

@@ -20,4 +20,5 @@ type SubsService interface {
 type PaymentService interface {
 	SetPaymentMethod(paymentMethod string) error
 	GetPaymentUrl(userUuid uuid.UUID, subscription models.KindSubscription, duration models.DurationSubscription) (string, error)
+	ProcessingWebhookPayment(userUuid uuid.UUID, invoiceUuid uuid.UUID, acquiringInvoiceId string) error
 }

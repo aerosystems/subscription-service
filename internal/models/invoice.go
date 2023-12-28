@@ -9,6 +9,7 @@ type Invoice struct {
 	Id                 int           `json:"id"`
 	Amount             int           `json:"amount"`
 	UserUuid           uuid.UUID     `json:"userUuid"`
+	InvoiceUuid        uuid.UUID     `json:"invoiceUuid"`
 	PaymentMethod      PaymentMethod `json:"paymentMethod"`
 	AcquiringInvoiceId string        `json:"acquiringInvoiceId"`
 	PaymentStatus      PaymentStatus `json:"paymentStatus"`
