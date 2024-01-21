@@ -5,10 +5,14 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"time"
+)
+
+const (
+	InvoiceStatusSuccess    = "success"
+	InvoiceStatusProcessing = "processing"
 )
 
 type Webhook struct {
@@ -35,8 +39,8 @@ type CancelItem struct {
 	ExtRef       string    `json:"extRef"`
 }
 
-func (c *Client) CheckWebhookSignature(bodyBytes []byte, xSignBase64 string) error {
-	pubKeyBase64, err := c.getPubKey()
+func (a Acquiring) CheckWebhookSignature(bodyBytes []byte, xSignBase64 string) error {
+	pubKeyBase64, err := a.getPubKey()
 	if err != nil {
 		return err
 	}
@@ -66,12 +70,4 @@ func (c *Client) CheckWebhookSignature(bodyBytes []byte, xSignBase64 string) err
 		return errors.New("invalid signature")
 	}
 	return nil
-}
-
-func (c *Client) GetWebhookFromRequest(bodyBytes []byte) (*Webhook, error) {
-	var webhook Webhook
-	if err := json.Unmarshal(bodyBytes, &webhook); err != nil {
-		return nil, err
-	}
-	return &webhook, nil
 }

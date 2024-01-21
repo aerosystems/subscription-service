@@ -23,6 +23,6 @@ func (app *Config) NewRouter() *echo.Echo {
 
 	e.POST("/v1/invoices/:payment_method", app.baseHandler.CreateInvoice, app.oauthMiddleware.AuthTokenMiddleware(models.CustomerRole))
 
-	e.POST("/v1/webhook/monobank", app.baseHandler.WebhookMonobank)
+	e.POST("/v1/webhook/:payment_method", app.baseHandler.WebhookPayment)
 	return e
 }

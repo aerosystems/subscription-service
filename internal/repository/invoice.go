@@ -40,6 +40,15 @@ func (i *InvoiceRepo) GetById(id int) (*models.Invoice, error) {
 	return &invoice, nil
 }
 
+func (i *InvoiceRepo) GetByAcquiringInvoiceId(acquiringInvoiceId string) (*models.Invoice, error) {
+	var invoice models.Invoice
+	result := i.db.Where("acquiring_invoice_id = ?", acquiringInvoiceId).First(&invoice)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &invoice, nil
+}
+
 func (i *InvoiceRepo) Update(invoice *models.Invoice) error {
 	result := i.db.Save(&invoice)
 	if result.Error != nil {

@@ -3,12 +3,19 @@ package monobank
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/http/httputil"
 )
 
 const (
 	invoiceCreateUrl = "https://api.monobank.ua/api/merchant/invoice/create"
 )
+
+type ErrorResponse struct {
+	ErrCode string `json:"errCode"`
+	ErrText string `json:"errText"`
+}
 
 type Invoice struct {
 	Amount           int              `json:"amount"`
@@ -16,19 +23,19 @@ type Invoice struct {
 	MerchantPaymInfo MerchantPaymInfo `json:"merchantPaymInfo"`
 	RedirectURL      string           `json:"redirectUrl"`
 	WebHookURL       string           `json:"webHookUrl"`
-	Validity         int              `json:"validity"`
-	PaymentType      string           `json:"paymentType"`
-	QrId             string           `json:"qrId"`
-	Code             string           `json:"code"`
-	SaveCardData     SaveCardData     `json:"saveCardData"`
+	Validity         int              `json:"validity,omitempty"`
+	PaymentType      string           `json:"paymentType,omitempty"`
+	QrId             string           `json:"qrId,omitempty"`
+	Code             string           `json:"code,omitempty"`
+	SaveCardData     SaveCardData     `json:"saveCardData,omitempty"`
 }
 
 type MerchantPaymInfo struct {
 	Reference      string        `json:"reference"`
 	Destination    string        `json:"destination"`
 	Comment        string        `json:"comment"`
-	CustomerEmails []interface{} `json:"customerEmails"`
-	BasketOrder    []BasketOrder `json:"basketOrder"`
+	CustomerEmails []interface{} `json:"customerEmails,omitempty"`
+	BasketOrder    []BasketOrder `json:"basketOrder,omitempty"`
 }
 
 type BasketOrder struct {
@@ -62,7 +69,7 @@ type InvoiceData struct {
 	PageUrl   string `json:"pageUrl"`
 }
 
-func (c *Client) CreateInvoice(invoice *Invoice) (*InvoiceData, error) {
+func (a Acquiring) CreateInvoice(invoice *Invoice) (*InvoiceData, error) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(invoice); err != nil {
 		return nil, err
@@ -71,11 +78,25 @@ func (c *Client) CreateInvoice(invoice *Invoice) (*InvoiceData, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("X-Token", c.xToken)
+	req.Header.Set("X-Token", a.xToken)
 	req.Header.Set("Content-Type", "application/json")
+	dump, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		fmt.Println("Error dumping request:", err)
+		return nil, err
+	}
+
+	fmt.Println(string(dump))
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		var errorResponse ErrorResponse
+		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("monobank request error code: %s, error text: %s", errorResponse.ErrCode, errorResponse.ErrText)
 	}
 	defer resp.Body.Close()
 	var response InvoiceData

@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/aerosystems/subs-service/internal/handlers"
 	middleware "github.com/aerosystems/subs-service/internal/middleware"
 	"github.com/aerosystems/subs-service/internal/models"
+	"github.com/aerosystems/subs-service/internal/presenters/rest"
+	RPCServer "github.com/aerosystems/subs-service/internal/presenters/rpc"
 	"github.com/aerosystems/subs-service/internal/repository"
-	RPCServer "github.com/aerosystems/subs-service/internal/rpc_server"
 	"github.com/aerosystems/subs-service/internal/services"
+	"github.com/aerosystems/subs-service/internal/services/payment"
 	"github.com/aerosystems/subs-service/internal/validators"
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
@@ -19,8 +20,10 @@ import (
 )
 
 const (
-	webPort = 80
-	rpcPort = 5001
+	webPort             = 80
+	rpcPort             = 5001
+	monobankRedirectUrl = "https://verifire.app/payment/success"
+	monobankWebHookUrl  = "https://gw.verifire.app/subs/v1/webhook/monobank"
 )
 
 // @title Subscription Service
@@ -45,9 +48,13 @@ func main() {
 	log := logger.NewLogger(os.Getenv("HOSTNAME"))
 
 	clientGORM := GormPostgres.NewClient(logrus.NewEntry(log.Logger))
-	clientGORM.AutoMigrate(models.Subscription{})
+	clientGORM.AutoMigrate(models.Subscription{}, models.Invoice{})
 
-	clientMonobank := monobank.NewClient(os.Getenv("MONOBANK_X_TOKEN"))
+	monobankAcquiring := monobank.NewAcquiring("m40_51qVxGawjd3FiJdjhlw")
+	monobankStrategy := payment.NewMonobankStrategy(*monobankAcquiring, monobankRedirectUrl, monobankWebHookUrl, monobank.USD)
+	paymentMap := map[models.PaymentMethod]payment.AcquiringOperations{
+		models.MonobankPaymentMethod: monobankStrategy,
+	}
 
 	priceRepo := repository.NewPriceRepo()
 
@@ -55,9 +62,9 @@ func main() {
 	subscriptionService := services.NewSubsServiceImpl(subscriptionRepo, priceRepo)
 
 	invoiceRepo := repository.NewInvoiceRepo(clientGORM)
-	paymentService := services.NewPaymentServiceImpl(invoiceRepo, priceRepo, clientMonobank)
+	paymentService := payment.NewServiceImpl(invoiceRepo, priceRepo, paymentMap)
 
-	baseHandler := handlers.NewBaseHandler(os.Getenv("APP_ENV"), log.Logger, subscriptionService, paymentService)
+	baseHandler := rest.NewBaseHandler(os.Getenv("APP_ENV"), log.Logger, subscriptionService, paymentService)
 	rpcServer := RPCServer.NewSubsServer(rpcPort, log.Logger, subscriptionService)
 
 	accessTokenService := services.NewAccessTokenServiceImpl(os.Getenv("ACCESS_SECRET"))

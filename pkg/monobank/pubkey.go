@@ -13,13 +13,13 @@ type PubKeyResponse struct {
 	Key string `json:"key"`
 }
 
-func (c *Client) getPubKey() (string, error) {
+func (a Acquiring) getPubKey() (string, error) {
 	httpClient := &http.Client{}
 	req, err := http.NewRequest("GET", pubKeyUrl, nil)
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("X-Token", c.xToken)
+	req.Header.Set("X-Token", a.xToken)
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return "", err

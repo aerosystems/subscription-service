@@ -9,6 +9,7 @@ type InvoiceRepository interface {
 	Create(invoice *models.Invoice) error
 	GetByUserUuid(userUuid uuid.UUID) ([]models.Invoice, error)
 	GetById(id int) (*models.Invoice, error)
+	GetByAcquiringInvoiceId(acquiringInvoiceId string) (*models.Invoice, error)
 	Update(invoice *models.Invoice) error
 	Delete(invoice *models.Invoice) error
 }

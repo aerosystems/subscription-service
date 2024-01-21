@@ -1,4 +1,4 @@
-package handlers
+package rest
 
 import (
 	"github.com/aerosystems/subs-service/internal/models"
@@ -10,7 +10,7 @@ import (
 
 type InvoiceRequest struct {
 	KindSubscription     models.KindSubscription     `json:"kindSubscription" validate:"required" example:"business"`
-	DurationSubscription models.DurationSubscription `json:"durationSubscription" validate:"required" example:"annually"`
+	DurationSubscription models.DurationSubscription `json:"durationSubscription" validate:"required" example:"12m"`
 }
 
 type InvoiceResponse struct {
@@ -34,7 +34,7 @@ type InvoiceResponse struct {
 // @Router /v1/invoices/{payment_method} [post]
 func (h *BaseHandler) CreateInvoice(c echo.Context) error {
 	accessTokenClaims := c.Get("accessTokenClaims").(*services.AccessTokenClaims)
-	method := c.Param("payment_method")
+	method := models.PaymentMethod(c.Param("payment_method"))
 	if err := h.paymentService.SetPaymentMethod(method); err != nil {
 		return h.ErrorResponse(c, http.StatusBadRequest, "invalid payment method", err)
 	}
