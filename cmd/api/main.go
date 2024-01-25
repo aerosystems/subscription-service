@@ -41,7 +41,7 @@ const (
 // @name Authorization
 // @description Should contain Access JWT Token, with the Bearer started
 
-// @host gw.verifire.com/subs
+// @host gw.verifire.app/subs
 // @schemes https
 // @BasePath /
 func main() {

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httputil"
 )
 
 const (
@@ -80,13 +79,6 @@ func (a Acquiring) CreateInvoice(invoice *Invoice) (*InvoiceData, error) {
 	}
 	req.Header.Set("X-Token", a.xToken)
 	req.Header.Set("Content-Type", "application/json")
-	dump, err := httputil.DumpRequest(req, true)
-	if err != nil {
-		fmt.Println("Error dumping request:", err)
-		return nil, err
-	}
-
-	fmt.Println(string(dump))
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
