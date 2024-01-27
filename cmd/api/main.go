@@ -10,6 +10,7 @@ import (
 	"github.com/aerosystems/subs-service/internal/services"
 	"github.com/aerosystems/subs-service/internal/services/payment"
 	"github.com/aerosystems/subs-service/internal/validators"
+	"github.com/aerosystems/subs-service/pkg/access"
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
 	"github.com/aerosystems/subs-service/pkg/monobank"
@@ -50,7 +51,7 @@ func main() {
 	clientGORM := GormPostgres.NewClient(logrus.NewEntry(log.Logger))
 	clientGORM.AutoMigrate(models.Subscription{}, models.Invoice{})
 
-	monobankAcquiring := monobank.NewAcquiring("m40_51qVxGawjd3FiJdjhlw")
+	monobankAcquiring := monobank.NewAcquiring(os.Getenv("MONOBANK_X_TOKEN"))
 	monobankStrategy := payment.NewMonobankStrategy(*monobankAcquiring, monobankRedirectUrl, monobankWebHookUrl, monobank.USD)
 	paymentMap := map[models.PaymentMethod]payment.AcquiringOperations{
 		models.MonobankPaymentMethod: monobankStrategy,
@@ -67,7 +68,7 @@ func main() {
 	baseHandler := rest.NewBaseHandler(os.Getenv("APP_ENV"), log.Logger, subscriptionService, paymentService)
 	rpcServer := RPCServer.NewSubsServer(rpcPort, log.Logger, subscriptionService)
 
-	accessTokenService := services.NewAccessTokenServiceImpl(os.Getenv("ACCESS_SECRET"))
+	accessTokenService := access.NewTokenService(os.Getenv("ACCESS_SECRET"))
 
 	oauthMiddleware := middleware.NewOAuthMiddlewareImpl(accessTokenService)
 	basicAuthMiddleware := middleware.NewBasicAuthMiddlewareImpl(os.Getenv("BASIC_AUTH_DOCS_USERNAME"), os.Getenv("BASIC_AUTH_DOCS_PASSWORD"))
