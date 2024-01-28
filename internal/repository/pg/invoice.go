@@ -1,6 +1,7 @@
-package repository
+package pg
 
 import (
+	"errors"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -35,6 +36,9 @@ func (i *InvoiceRepo) GetById(id int) (*models.Invoice, error) {
 	var invoice models.Invoice
 	result := i.db.Where("id = ?", id).First(&invoice)
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, result.Error
 	}
 	return &invoice, nil
@@ -44,6 +48,9 @@ func (i *InvoiceRepo) GetByAcquiringInvoiceId(acquiringInvoiceId string) (*model
 	var invoice models.Invoice
 	result := i.db.Where("acquiring_invoice_id = ?", acquiringInvoiceId).First(&invoice)
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, result.Error
 	}
 	return &invoice, nil

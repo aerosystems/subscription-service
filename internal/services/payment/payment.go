@@ -3,7 +3,7 @@ package payment
 import (
 	"fmt"
 	"github.com/aerosystems/subs-service/internal/models"
-	"github.com/aerosystems/subs-service/internal/repository"
+	"github.com/aerosystems/subs-service/internal/repository/pg"
 	"github.com/google/uuid"
 	"time"
 )
@@ -14,12 +14,12 @@ const (
 
 type ServiceImpl struct {
 	acquiring   AcquiringOperations
-	invoiceRepo repository.InvoiceRepository
-	priceRepo   repository.PriceRepository
+	invoiceRepo pg.InvoiceRepository
+	priceRepo   pg.PriceRepository
 	strategies  map[models.PaymentMethod]AcquiringOperations
 }
 
-func NewServiceImpl(invoiceRepo repository.InvoiceRepository, priceRepo repository.PriceRepository, strategies map[models.PaymentMethod]AcquiringOperations) *ServiceImpl {
+func NewServiceImpl(invoiceRepo pg.InvoiceRepository, priceRepo pg.PriceRepository, strategies map[models.PaymentMethod]AcquiringOperations) *ServiceImpl {
 	return &ServiceImpl{
 		invoiceRepo: invoiceRepo,
 		priceRepo:   priceRepo,

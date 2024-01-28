@@ -1,4 +1,4 @@
-package repository
+package pg
 
 import (
 	"github.com/aerosystems/subs-service/internal/models"

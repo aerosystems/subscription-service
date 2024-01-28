@@ -7,7 +7,7 @@ import (
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/presenters/rest"
 	RPCServer "github.com/aerosystems/subs-service/internal/presenters/rpc"
-	"github.com/aerosystems/subs-service/internal/repository"
+	"github.com/aerosystems/subs-service/internal/repository/pg"
 	"github.com/aerosystems/subs-service/internal/services"
 	"github.com/aerosystems/subs-service/internal/services/payment"
 	"github.com/aerosystems/subs-service/internal/validators"
@@ -57,12 +57,12 @@ func main() {
 		models.MonobankPaymentMethod: monobankStrategy,
 	}
 
-	priceRepo := repository.NewPriceRepo()
+	priceRepo := pg.NewPriceRepo()
 
-	subscriptionRepo := repository.NewSubscriptionRepo(clientGORM)
+	subscriptionRepo := pg.NewSubscriptionRepo(clientGORM)
 	subscriptionService := services.NewSubsServiceImpl(subscriptionRepo, priceRepo)
 
-	invoiceRepo := repository.NewInvoiceRepo(clientGORM)
+	invoiceRepo := pg.NewInvoiceRepo(clientGORM)
 	paymentService := payment.NewServiceImpl(invoiceRepo, priceRepo, paymentMap)
 
 	baseHandler := rest.NewBaseHandler(os.Getenv("APP_ENV"), log.Logger, subscriptionService, paymentService)

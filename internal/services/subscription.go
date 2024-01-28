@@ -2,7 +2,7 @@ package services
 
 import (
 	"github.com/aerosystems/subs-service/internal/models"
-	"github.com/aerosystems/subs-service/internal/repository"
+	"github.com/aerosystems/subs-service/internal/repository/pg"
 	"github.com/google/uuid"
 	"time"
 )
@@ -10,11 +10,11 @@ import (
 const defaultTimeDuration = 60 * 60 * 24 * 14 // 14 days
 
 type SubsServiceImpl struct {
-	subsRepo  repository.SubscriptionRepository
-	priceRepo repository.PriceRepository
+	subsRepo  pg.SubscriptionRepository
+	priceRepo pg.PriceRepository
 }
 
-func NewSubsServiceImpl(subsRepo repository.SubscriptionRepository, priceRepo repository.PriceRepository) *SubsServiceImpl {
+func NewSubsServiceImpl(subsRepo pg.SubscriptionRepository, priceRepo pg.PriceRepository) *SubsServiceImpl {
 	return &SubsServiceImpl{
 		subsRepo:  subsRepo,
 		priceRepo: priceRepo,
