@@ -23,8 +23,8 @@ import (
 const (
 	webPort             = 80
 	rpcPort             = 5001
-	monobankRedirectUrl = "https://verifire.app/payment/success"
-	monobankWebHookUrl  = "https://gw.verifire.app/subs/v1/webhook/monobank"
+	monobankRedirectUrl = "https://verifire.dev/payment/success"
+	monobankWebHookUrl  = "https://gw.verifire.dev/subs/v1/webhook/monobank"
 )
 
 // @title Subscription Service
@@ -42,7 +42,7 @@ const (
 // @name Authorization
 // @description Should contain Access JWT Token, with the Bearer started
 
-// @host gw.verifire.app/subs
+// @host gw.verifire.dev/subs
 // @schemes https
 // @BasePath /
 func main() {
