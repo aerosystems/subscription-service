@@ -1,13 +1,14 @@
 package services
 
 import (
+	OAuthService "github.com/aerosystems/checkmail-service/pkg/oauth_service"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/google/uuid"
 )
 
 type TokenService interface {
 	GetAccessSecret() string
-	DecodeAccessToken(tokenString string) (*AccessTokenClaims, error)
+	DecodeAccessToken(tokenString string) (*OAuthService.AccessTokenClaims, error)
 }
 
 type SubsService interface {

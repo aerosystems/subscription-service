@@ -1,7 +1,7 @@
 package rest
 
 import (
-	"github.com/aerosystems/subs-service/internal/services"
+	"github.com/aerosystems/subs-service/pkg/oauth_service"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -19,7 +19,7 @@ import (
 // @Failure 500 {object} Response
 // @Router /v1/subscriptions [get]
 func (h *BaseHandler) GetSubscriptions(c echo.Context) error {
-	accessTokenClaims := c.Get("accessTokenClaims").(*services.AccessTokenClaims)
+	accessTokenClaims := c.Get("accessTokenClaims").(*OAuthService.AccessTokenClaims)
 	subscription, err := h.subscriptionService.GetSubscription(uuid.MustParse(accessTokenClaims.UserUuid))
 	if err != nil {
 		return h.ErrorResponse(c, http.StatusInternalServerError, "could not find subscription", err)

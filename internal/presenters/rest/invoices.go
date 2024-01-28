@@ -2,7 +2,7 @@ package rest
 
 import (
 	"github.com/aerosystems/subs-service/internal/models"
-	"github.com/aerosystems/subs-service/internal/services"
+	OAuthService "github.com/aerosystems/subs-service/pkg/oauth_service"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -33,7 +33,7 @@ type InvoiceResponse struct {
 // @Failure 500 {object} Response
 // @Router /v1/invoices/{payment_method} [post]
 func (h *BaseHandler) CreateInvoice(c echo.Context) error {
-	accessTokenClaims := c.Get("accessTokenClaims").(*services.AccessTokenClaims)
+	accessTokenClaims := c.Get("accessTokenClaims").(*OAuthService.AccessTokenClaims)
 	method := models.PaymentMethod(c.Param("payment_method"))
 	if err := h.paymentService.SetPaymentMethod(method); err != nil {
 		return h.ErrorResponse(c, http.StatusBadRequest, "invalid payment method", err)

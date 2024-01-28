@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	OAuthService "github.com/aerosystems/checkmail-service/pkg/oauth_service"
 	middleware "github.com/aerosystems/subs-service/internal/middleware"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/presenters/rest"
@@ -10,7 +11,6 @@ import (
 	"github.com/aerosystems/subs-service/internal/services"
 	"github.com/aerosystems/subs-service/internal/services/payment"
 	"github.com/aerosystems/subs-service/internal/validators"
-	"github.com/aerosystems/subs-service/pkg/access"
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
 	"github.com/aerosystems/subs-service/pkg/monobank"
@@ -68,7 +68,7 @@ func main() {
 	baseHandler := rest.NewBaseHandler(os.Getenv("APP_ENV"), log.Logger, subscriptionService, paymentService)
 	rpcServer := RPCServer.NewSubsServer(rpcPort, log.Logger, subscriptionService)
 
-	accessTokenService := access.NewTokenService(os.Getenv("ACCESS_SECRET"))
+	accessTokenService := OAuthService.NewAccessTokenService(os.Getenv("ACCESS_SECRET"))
 
 	oauthMiddleware := middleware.NewOAuthMiddlewareImpl(accessTokenService)
 	basicAuthMiddleware := middleware.NewBasicAuthMiddlewareImpl(os.Getenv("BASIC_AUTH_DOCS_USERNAME"), os.Getenv("BASIC_AUTH_DOCS_PASSWORD"))
