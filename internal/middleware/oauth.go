@@ -3,7 +3,6 @@ package middleware
 import (
 	"errors"
 	"github.com/aerosystems/subs-service/internal/models"
-	"github.com/aerosystems/subs-service/internal/services"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -15,10 +14,10 @@ type OAuthMiddleware interface {
 }
 
 type OAuthMiddlewareImpl struct {
-	tokenService services.TokenService
+	tokenService TokenService
 }
 
-func NewOAuthMiddlewareImpl(tokenService services.TokenService) *OAuthMiddlewareImpl {
+func NewOAuthMiddlewareImpl(tokenService TokenService) *OAuthMiddlewareImpl {
 	return &OAuthMiddlewareImpl{
 		tokenService: tokenService,
 	}

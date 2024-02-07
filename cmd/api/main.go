@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	OAuthService "github.com/aerosystems/checkmail-service/pkg/oauth_service"
 	middleware "github.com/aerosystems/subs-service/internal/middleware"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/presenters/rest"
@@ -14,6 +13,7 @@ import (
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
 	"github.com/aerosystems/subs-service/pkg/monobank"
+	OAuthService "github.com/aerosystems/subs-service/pkg/oauth_service"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"net/rpc"
