@@ -1,8 +1,8 @@
 package services
 
 import (
-	OAuthService "github.com/aerosystems/checkmail-service/pkg/oauth_service"
 	"github.com/aerosystems/subs-service/internal/models"
+	OAuthService "github.com/aerosystems/subs-service/pkg/oauth_service"
 	"github.com/google/uuid"
 )
 
