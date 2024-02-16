@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/aerosystems/subs-service/internal/infrastructure/rest"
+	RPCServer "github.com/aerosystems/subs-service/internal/infrastructure/rpc"
 	middleware "github.com/aerosystems/subs-service/internal/middleware"
 	"github.com/aerosystems/subs-service/internal/models"
-	"github.com/aerosystems/subs-service/internal/presenters/rest"
-	RPCServer "github.com/aerosystems/subs-service/internal/presenters/rpc"
 	"github.com/aerosystems/subs-service/internal/repository/pg"
 	"github.com/aerosystems/subs-service/internal/services"
 	"github.com/aerosystems/subs-service/internal/services/payment"

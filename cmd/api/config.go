@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/aerosystems/subs-service/internal/infrastructure/rest"
 	"github.com/aerosystems/subs-service/internal/middleware"
-	"github.com/aerosystems/subs-service/internal/presenters/rest"
 )
 
 type Config struct {
