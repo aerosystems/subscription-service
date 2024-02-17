@@ -1,4 +1,4 @@
-package pg
+package usecases
 
 import (
 	"github.com/aerosystems/subs-service/internal/models"

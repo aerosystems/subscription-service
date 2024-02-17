@@ -1,4 +1,4 @@
-package pg
+package repository
 
 import (
 	"errors"

@@ -1,25 +1,26 @@
 package rest
 
 import (
-	"github.com/aerosystems/subs-service/internal/services"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"strings"
 )
 
 type BaseHandler struct {
-	mode                string
-	log                 *logrus.Logger
-	subscriptionService services.SubsService
-	paymentService      services.PaymentService
+	mode      string
+	log       *logrus.Logger
+	validator validator.Validate
 }
 
-func NewBaseHandler(mode string, log *logrus.Logger, subscriptionService services.SubsService, paymentService services.PaymentService) *BaseHandler {
+func NewBaseHandler(
+	log *logrus.Logger,
+	mode string,
+) *BaseHandler {
 	return &BaseHandler{
-		mode:                mode,
-		log:                 log,
-		subscriptionService: subscriptionService,
-		paymentService:      paymentService,
+		mode:      mode,
+		log:       log,
+		validator: validator.Validate{},
 	}
 }
 
@@ -27,6 +28,13 @@ func NewBaseHandler(mode string, log *logrus.Logger, subscriptionService service
 type Response struct {
 	Message string `json:"message"`
 	Data    any    `json:"data,omitempty"`
+}
+
+// ErrorResponse is the type used for sending JSON around
+type ErrorResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Error   any    `json:"error,omitempty"`
 }
 
 // SuccessResponse takes a response status code and arbitrary data and writes a json response to the client

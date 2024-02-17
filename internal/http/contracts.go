@@ -1,6 +1,6 @@
-package middleware
+package HTTPServer
 
-import OAuthService "github.com/aerosystems/subs-service/pkg/oauth_service"
+import OAuthService "github.com/aerosystems/subs-service/pkg/oauth"
 
 type TokenService interface {
 	GetAccessSecret() string

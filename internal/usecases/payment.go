@@ -1,9 +1,8 @@
-package payment
+package usecases
 
 import (
 	"fmt"
 	"github.com/aerosystems/subs-service/internal/models"
-	"github.com/aerosystems/subs-service/internal/repository/pg"
 	"github.com/google/uuid"
 	"time"
 )
@@ -12,15 +11,15 @@ const (
 	titlePage = "Verifire - protect your business"
 )
 
-type ServiceImpl struct {
+type PaymentUsecase struct {
 	acquiring   AcquiringOperations
-	invoiceRepo pg.InvoiceRepository
-	priceRepo   pg.PriceRepository
+	invoiceRepo InvoiceRepository
+	priceRepo   PriceRepository
 	strategies  map[models.PaymentMethod]AcquiringOperations
 }
 
-func NewServiceImpl(invoiceRepo pg.InvoiceRepository, priceRepo pg.PriceRepository, strategies map[models.PaymentMethod]AcquiringOperations) *ServiceImpl {
-	return &ServiceImpl{
+func NewPaymentUsecase(invoiceRepo InvoiceRepository, priceRepo PriceRepository, strategies map[models.PaymentMethod]AcquiringOperations) *PaymentUsecase {
+	return &PaymentUsecase{
 		invoiceRepo: invoiceRepo,
 		priceRepo:   priceRepo,
 		strategies:  strategies,
@@ -44,7 +43,7 @@ type AcquiringOperations interface {
 	GetWebhookFromRequest(bodyBytes []byte, headers map[string][]string) (Webhook, error)
 }
 
-func (ps *ServiceImpl) SetPaymentMethod(paymentMethod models.PaymentMethod) error {
+func (ps *PaymentUsecase) SetPaymentMethod(paymentMethod models.PaymentMethod) error {
 	if _, ok := ps.strategies[paymentMethod]; !ok {
 		return fmt.Errorf("invalid payment method")
 	}
@@ -52,7 +51,7 @@ func (ps *ServiceImpl) SetPaymentMethod(paymentMethod models.PaymentMethod) erro
 	return nil
 }
 
-func (ps *ServiceImpl) GetPaymentUrl(userUuid uuid.UUID, subscription models.KindSubscription, duration models.DurationSubscription) (string, error) {
+func (ps *PaymentUsecase) GetPaymentUrl(userUuid uuid.UUID, subscription models.KindSubscription, duration models.DurationSubscription) (string, error) {
 	amount, err := ps.priceRepo.GetPrice(subscription, duration)
 	if err != nil {
 		return "", err
@@ -76,7 +75,7 @@ func (ps *ServiceImpl) GetPaymentUrl(userUuid uuid.UUID, subscription models.Kin
 	return invoice.AcquiringPageUrl, nil
 }
 
-func (ps *ServiceImpl) ProcessingWebhookPayment(bodyBytes []byte, headers map[string][]string) error {
+func (ps *PaymentUsecase) ProcessingWebhookPayment(bodyBytes []byte, headers map[string][]string) error {
 	webhook, err := ps.acquiring.GetWebhookFromRequest(bodyBytes, headers)
 	if err != nil {
 		return err

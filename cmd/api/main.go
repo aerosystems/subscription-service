@@ -7,7 +7,6 @@ import (
 	middleware "github.com/aerosystems/subs-service/internal/middleware"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/repository/pg"
-	"github.com/aerosystems/subs-service/internal/services"
 	"github.com/aerosystems/subs-service/internal/services/payment"
 	"github.com/aerosystems/subs-service/internal/validators"
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
@@ -60,7 +59,7 @@ func main() {
 	priceRepo := pg.NewPriceRepo()
 
 	subscriptionRepo := pg.NewSubscriptionRepo(clientGORM)
-	subscriptionService := services.NewSubsServiceImpl(subscriptionRepo, priceRepo)
+	subscriptionService := usecases.NewSubsServiceImpl(subscriptionRepo, priceRepo)
 
 	invoiceRepo := pg.NewInvoiceRepo(clientGORM)
 	paymentService := payment.NewServiceImpl(invoiceRepo, priceRepo, paymentMap)
@@ -91,7 +90,7 @@ func main() {
 	go func() {
 		log.Infof("starting subs-service RPC server on port %d\n", rpcPort)
 		errChan <- rpc.Register(rpcServer)
-		errChan <- rpcServer.Listen(rpcPort)
+		errChan <- rpcServer.Run(rpcPort)
 	}()
 
 	for {
