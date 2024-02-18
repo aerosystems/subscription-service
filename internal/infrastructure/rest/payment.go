@@ -13,6 +13,16 @@ type PaymentHandler struct {
 	paymentUsecase PaymentUsecase
 }
 
+func NewPaymentHandler(
+	baseHandler *BaseHandler,
+	paymentUsecase PaymentUsecase,
+) *PaymentHandler {
+	return &PaymentHandler{
+		BaseHandler:    baseHandler,
+		paymentUsecase: paymentUsecase,
+	}
+}
+
 func (ph PaymentHandler) WebhookPayment(c echo.Context) error {
 	method := models.PaymentMethod(c.Param("payment_method"))
 	if err := ph.paymentUsecase.SetPaymentMethod(method); err != nil {

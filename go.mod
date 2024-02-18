@@ -1,6 +1,6 @@
 module github.com/aerosystems/subs-service
 
-go 1.19
+go 1.22
 
 require (
 	github.com/mattn/go-colorable v0.1.13

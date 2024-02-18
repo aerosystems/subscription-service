@@ -12,6 +12,10 @@ type SubscriptionHandler struct {
 	subscriptionUsecase SubscriptionUsecase
 }
 
+func NewSubscriptionHandler(baseHandler *BaseHandler, subscriptionUsecase SubscriptionUsecase) *SubscriptionHandler {
+	return &SubscriptionHandler{baseHandler, subscriptionUsecase}
+}
+
 // GetSubscriptions godoc
 // @Summary Get subscriptions
 // @Description get subscriptions by userUuid

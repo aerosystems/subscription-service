@@ -7,20 +7,20 @@ import (
 )
 
 type MonobankStrategy struct {
-	monobankClient monobank.Acquiring
-	paymentMethod  models.PaymentMethod
-	redirectUrl    string
-	webHookUrl     string
-	currency       monobank.Ccy
+	monobankAcquiring *monobank.Acquiring
+	paymentMethod     models.PaymentMethod
+	redirectUrl       string
+	webHookUrl        string
+	currency          monobank.Ccy
 }
 
-func NewMonobankStrategy(monobankClient monobank.Acquiring, redirectUrl, webHookUrl string, currency monobank.Ccy) MonobankStrategy {
-	return MonobankStrategy{
-		monobankClient: monobankClient,
-		paymentMethod:  models.MonobankPaymentMethod,
-		redirectUrl:    redirectUrl,
-		webHookUrl:     webHookUrl,
-		currency:       currency,
+func NewMonobankStrategy(monobankClient *monobank.Acquiring, redirectUrl, webHookUrl string, currency monobank.Ccy) *MonobankStrategy {
+	return &MonobankStrategy{
+		monobankAcquiring: monobankClient,
+		paymentMethod:     models.MonobankPaymentMethod,
+		redirectUrl:       redirectUrl,
+		webHookUrl:        webHookUrl,
+		currency:          currency,
 	}
 }
 
@@ -40,7 +40,7 @@ func (ms MonobankStrategy) CreateInvoice(amount int, invoiceUuid, title, descrip
 			Reference:   invoiceUuid,
 		},
 	}
-	invoice, err := ms.monobankClient.CreateInvoice(monoInvoice)
+	invoice, err := ms.monobankAcquiring.CreateInvoice(monoInvoice)
 	if err != nil {
 		return Invoice{}, err
 	}
@@ -49,7 +49,7 @@ func (ms MonobankStrategy) CreateInvoice(amount int, invoiceUuid, title, descrip
 
 func (ms MonobankStrategy) GetWebhookFromRequest(bodyBytes []byte, headers map[string][]string) (Webhook, error) {
 	xSignBase64 := headers["X-Sign"][0]
-	if err := ms.monobankClient.CheckWebhookSignature(bodyBytes, xSignBase64); err != nil {
+	if err := ms.monobankAcquiring.CheckWebhookSignature(bodyBytes, xSignBase64); err != nil {
 		return Webhook{}, err
 	}
 	var webhook monobank.Webhook
