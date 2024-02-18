@@ -7,12 +7,12 @@ import (
 )
 
 type Config struct {
-	Mode                string `mapstructure:"MODE"`
-	PostgresDSN         string `mapstructure:"POSTGRES_DSN"`
-	AccessSecret        string `mapstructure:"ACCESS_SECRET"`
-	MonobankToken       string `mapstructure:"MONOBANK_TOKEN"`
-	MonobankRedirectUrl string `mapstructure:"MONOBANK_REDIRECT_URL"`
-	MonobankWebHookUrl  string `mapstructure:"MONOBANK_WEBHOOK_URL"`
+	Mode                string `mapstructure:"MODE" required:"true"`
+	PostgresDSN         string `mapstructure:"POSTGRES_DSN" required:"true"`
+	AccessSecret        string `mapstructure:"ACCESS_SECRET" required:"true"`
+	MonobankToken       string `mapstructure:"MONOBANK_TOKEN" required:"true"`
+	MonobankRedirectUrl string `mapstructure:"MONOBANK_REDIRECT_URL" required:"true"`
+	MonobankWebHookUrl  string `mapstructure:"MONOBANK_WEBHOOK_URL" required:"true"`
 }
 
 func NewConfig() *Config {

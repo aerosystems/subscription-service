@@ -44,14 +44,14 @@ func InitApp() *App {
 	paymentUsecase := ProvidePaymentUsecase(invoiceRepo, priceRepo, v)
 	paymentHandler := ProvidePaymentHandler(baseHandler, paymentUsecase)
 	accessTokenService := ProvideAccessTokenService(config)
-	server := ProvideHTTPServer(logrusLogger, subscriptionHandler, paymentHandler, accessTokenService)
-	rpcServerServer := ProvideRPCServer(logrusLogger, subscriptionUsecase)
+	server := ProvideHttpServer(logrusLogger, subscriptionHandler, paymentHandler, accessTokenService)
+	rpcServerServer := ProvideRpcServer(logrusLogger, subscriptionUsecase)
 	app := ProvideApp(logrusLogger, config, server, rpcServerServer)
 	return app
 }
 
-func ProvideApp(log *logrus.Logger, cfg *config.Config, httpServer *HTTPServer.Server, rpcServer *RPCServer.Server) *App {
-	app := NewApp(log, cfg, httpServer)
+func ProvideApp(log *logrus.Logger, cfg *config.Config, httpServer *HttpServer.Server, rpcServer *RpcServer.Server) *App {
+	app := NewApp(log, cfg, httpServer, rpcServer)
 	return app
 }
 
@@ -65,13 +65,13 @@ func ProvideConfig() *config.Config {
 	return configConfig
 }
 
-func ProvideHTTPServer(log *logrus.Logger, subscriptionHandler *rest.SubscriptionHandler, paymentHandler *rest.PaymentHandler, tokenService HTTPServer.TokenService) *HTTPServer.Server {
-	server := HTTPServer.NewServer(log, subscriptionHandler, paymentHandler, tokenService)
+func ProvideHttpServer(log *logrus.Logger, subscriptionHandler *rest.SubscriptionHandler, paymentHandler *rest.PaymentHandler, tokenService HttpServer.TokenService) *HttpServer.Server {
+	server := HttpServer.NewServer(log, subscriptionHandler, paymentHandler, tokenService)
 	return server
 }
 
-func ProvideRPCServer(log *logrus.Logger, subscriptionUsecase RPCServer.SubscriptionUsecase) *RPCServer.Server {
-	server := RPCServer.NewServer(log, subscriptionUsecase)
+func ProvideRpcServer(log *logrus.Logger, subscriptionUsecase RpcServer.SubscriptionUsecase) *RpcServer.Server {
+	server := RpcServer.NewServer(log, subscriptionUsecase)
 	return server
 }
 

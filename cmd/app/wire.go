@@ -5,9 +5,9 @@ package main
 
 import (
 	"github.com/aerosystems/subs-service/internal/config"
-	HTTPServer "github.com/aerosystems/subs-service/internal/http"
+	HttpServer "github.com/aerosystems/subs-service/internal/http"
 	"github.com/aerosystems/subs-service/internal/infrastructure/rest"
-	RPCServer "github.com/aerosystems/subs-service/internal/infrastructure/rpc"
+	RpcServer "github.com/aerosystems/subs-service/internal/infrastructure/rpc"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/repository"
 	"github.com/aerosystems/subs-service/internal/repository/pg"
@@ -24,8 +24,8 @@ import (
 //go:generate wire
 func InitApp() *App {
 	panic(wire.Build(
-		wire.Bind(new(HTTPServer.TokenService), new(*OAuthService.AccessTokenService)),
-		wire.Bind(new(RPCServer.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
+		wire.Bind(new(HttpServer.TokenService), new(*OAuthService.AccessTokenService)),
+		wire.Bind(new(RpcServer.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
 		wire.Bind(new(rest.PaymentUsecase), new(*usecases.PaymentUsecase)),
 		wire.Bind(new(rest.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
 		wire.Bind(new(usecases.SubscriptionRepository), new(*pg.SubscriptionRepo)),
@@ -34,8 +34,8 @@ func InitApp() *App {
 		ProvideApp,
 		ProvideLogger,
 		ProvideConfig,
-		ProvideHTTPServer,
-		ProvideRPCServer,
+		ProvideHttpServer,
+		ProvideRpcServer,
 		ProvideAccessTokenService,
 		ProvideLogrusLogger,
 		ProvideLogrusEntry,
@@ -55,7 +55,7 @@ func InitApp() *App {
 	)
 }
 
-func ProvideApp(log *logrus.Logger, cfg *config.Config, httpServer *HTTPServer.Server, rpcServer *RPCServer.Server) *App {
+func ProvideApp(log *logrus.Logger, cfg *config.Config, httpServer *HttpServer.Server, rpcServer *RpcServer.Server) *App {
 	panic(wire.Build(NewApp))
 }
 
@@ -70,12 +70,12 @@ func ProvideAccessTokenService(cfg *config.Config) *OAuthService.AccessTokenServ
 	return OAuthService.NewAccessTokenService(cfg.AccessSecret)
 }
 
-func ProvideHTTPServer(log *logrus.Logger, subscriptionHandler *rest.SubscriptionHandler, paymentHandler *rest.PaymentHandler, tokenService HTTPServer.TokenService) *HTTPServer.Server {
-	panic(wire.Build(HTTPServer.NewServer))
+func ProvideHttpServer(log *logrus.Logger, subscriptionHandler *rest.SubscriptionHandler, paymentHandler *rest.PaymentHandler, tokenService HttpServer.TokenService) *HttpServer.Server {
+	panic(wire.Build(HttpServer.NewServer))
 }
 
-func ProvideRPCServer(log *logrus.Logger, subscriptionUsecase RPCServer.SubscriptionUsecase) *RPCServer.Server {
-	panic(wire.Build(RPCServer.NewServer))
+func ProvideRpcServer(log *logrus.Logger, subscriptionUsecase RpcServer.SubscriptionUsecase) *RpcServer.Server {
+	panic(wire.Build(RpcServer.NewServer))
 }
 
 func ProvideLogrusEntry(log *logger.Logger) *logrus.Entry {

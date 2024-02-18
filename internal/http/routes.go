@@ -1,4 +1,4 @@
-package HTTPServer
+package HttpServer
 
 import (
 	"github.com/aerosystems/subs-service/internal/models"
