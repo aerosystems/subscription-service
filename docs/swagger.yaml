@@ -1,31 +1,5 @@
 basePath: /
 definitions:
-  handlers.InvoiceRequest:
-    properties:
-      durationSubscription:
-        allOf:
-        - $ref: '#/definitions/models.DurationSubscription'
-        example: 12m
-      kindSubscription:
-        allOf:
-        - $ref: '#/definitions/models.KindSubscription'
-        example: business
-    required:
-    - durationSubscription
-    - kindSubscription
-    type: object
-  handlers.InvoiceResponse:
-    properties:
-      paymentUrl:
-        example: https://api.monobank.ua
-        type: string
-    type: object
-  handlers.Response:
-    properties:
-      data: {}
-      message:
-        type: string
-    type: object
   models.DurationSubscription:
     enum:
     - 1m
@@ -59,7 +33,33 @@ definitions:
       updatedAt:
         type: string
     type: object
-host: gw.verifire.com/subs
+  rest.InvoiceRequest:
+    properties:
+      durationSubscription:
+        allOf:
+        - $ref: '#/definitions/models.DurationSubscription'
+        example: 12m
+      kindSubscription:
+        allOf:
+        - $ref: '#/definitions/models.KindSubscription'
+        example: business
+    required:
+    - durationSubscription
+    - kindSubscription
+    type: object
+  rest.InvoiceResponse:
+    properties:
+      paymentUrl:
+        example: https://api.monobank.ua
+        type: string
+    type: object
+  rest.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+    type: object
+host: gw.verifire.dev/subs
 info:
   contact:
     name: Artem Kostenko
@@ -89,7 +89,7 @@ paths:
         name: invoice
         required: true
         schema:
-          $ref: '#/definitions/handlers.InvoiceRequest'
+          $ref: '#/definitions/rest.InvoiceRequest'
       produces:
       - application/json
       responses:
@@ -97,27 +97,27 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.Response'
+            - $ref: '#/definitions/rest.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/handlers.InvoiceResponse'
+                  $ref: '#/definitions/rest.InvoiceResponse'
               type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/rest.Response'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/rest.Response'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/rest.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/rest.Response'
       security:
       - ApiKeyAuth: []
       summary: Create invoice
@@ -135,7 +135,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.Response'
+            - $ref: '#/definitions/rest.Response'
             - properties:
                 data:
                   additionalProperties:
@@ -147,7 +147,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/rest.Response'
       summary: Get prices
       tags:
       - prices
@@ -163,7 +163,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/handlers.Response'
+            - $ref: '#/definitions/rest.Response'
             - properties:
                 data:
                   $ref: '#/definitions/models.Subscription'
@@ -171,11 +171,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/rest.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.Response'
+            $ref: '#/definitions/rest.Response'
       security:
       - ApiKeyAuth: []
       summary: Get subscriptions
