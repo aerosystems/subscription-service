@@ -18,7 +18,6 @@ import (
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
 	"github.com/aerosystems/subs-service/pkg/monobank"
-	"github.com/aerosystems/subs-service/pkg/oauth"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -43,8 +42,7 @@ func InitApp() *App {
 	v := ProvidePaymentMap(monobankStrategy)
 	paymentUsecase := ProvidePaymentUsecase(invoiceRepo, priceRepo, v)
 	paymentHandler := ProvidePaymentHandler(baseHandler, paymentUsecase)
-	accessTokenService := ProvideAccessTokenService(config)
-	server := ProvideHttpServer(logrusLogger, subscriptionHandler, paymentHandler, accessTokenService)
+	server := ProvideHttpServer(logrusLogger, config, subscriptionHandler, paymentHandler)
 	rpcServerServer := ProvideRpcServer(logrusLogger, subscriptionUsecase)
 	app := ProvideApp(logrusLogger, config, server, rpcServerServer)
 	return app
@@ -63,11 +61,6 @@ func ProvideLogger() *logger.Logger {
 func ProvideConfig() *config.Config {
 	configConfig := config.NewConfig()
 	return configConfig
-}
-
-func ProvideHttpServer(log *logrus.Logger, subscriptionHandler *rest.SubscriptionHandler, paymentHandler *rest.PaymentHandler, tokenService HttpServer.TokenService) *HttpServer.Server {
-	server := HttpServer.NewServer(log, subscriptionHandler, paymentHandler, tokenService)
-	return server
 }
 
 func ProvideRpcServer(log *logrus.Logger, subscriptionUsecase RpcServer.SubscriptionUsecase) *RpcServer.Server {
@@ -112,8 +105,8 @@ func ProvidePriceRepo() *repository.PriceRepo {
 
 // wire.go:
 
-func ProvideAccessTokenService(cfg *config.Config) *OAuthService.AccessTokenService {
-	return OAuthService.NewAccessTokenService(cfg.AccessSecret)
+func ProvideHttpServer(log *logrus.Logger, cfg *config.Config, subscriptionHandler *rest.SubscriptionHandler, paymentHandler *rest.PaymentHandler) *HttpServer.Server {
+	return HttpServer.NewServer(log, cfg.AccessSecret, subscriptionHandler, paymentHandler)
 }
 
 func ProvideLogrusEntry(log *logger.Logger) *logrus.Entry {

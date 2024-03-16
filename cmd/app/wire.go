@@ -15,7 +15,6 @@ import (
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
 	"github.com/aerosystems/subs-service/pkg/monobank"
-	"github.com/aerosystems/subs-service/pkg/oauth"
 	"github.com/google/wire"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -24,7 +23,6 @@ import (
 //go:generate wire
 func InitApp() *App {
 	panic(wire.Build(
-		wire.Bind(new(HttpServer.TokenService), new(*OAuthService.AccessTokenService)),
 		wire.Bind(new(RpcServer.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
 		wire.Bind(new(rest.PaymentUsecase), new(*usecases.PaymentUsecase)),
 		wire.Bind(new(rest.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
@@ -36,7 +34,6 @@ func InitApp() *App {
 		ProvideConfig,
 		ProvideHttpServer,
 		ProvideRpcServer,
-		ProvideAccessTokenService,
 		ProvideLogrusLogger,
 		ProvideLogrusEntry,
 		ProvideGormPostgres,
@@ -66,12 +63,9 @@ func ProvideLogger() *logger.Logger {
 func ProvideConfig() *config.Config {
 	panic(wire.Build(config.NewConfig))
 }
-func ProvideAccessTokenService(cfg *config.Config) *OAuthService.AccessTokenService {
-	return OAuthService.NewAccessTokenService(cfg.AccessSecret)
-}
 
-func ProvideHttpServer(log *logrus.Logger, subscriptionHandler *rest.SubscriptionHandler, paymentHandler *rest.PaymentHandler, tokenService HttpServer.TokenService) *HttpServer.Server {
-	panic(wire.Build(HttpServer.NewServer))
+func ProvideHttpServer(log *logrus.Logger, cfg *config.Config, subscriptionHandler *rest.SubscriptionHandler, paymentHandler *rest.PaymentHandler) *HttpServer.Server {
+	return HttpServer.NewServer(log, cfg.AccessSecret, subscriptionHandler, paymentHandler)
 }
 
 func ProvideRpcServer(log *logrus.Logger, subscriptionUsecase RpcServer.SubscriptionUsecase) *RpcServer.Server {
