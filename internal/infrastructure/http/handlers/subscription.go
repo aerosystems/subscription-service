@@ -1,4 +1,4 @@
-package rest
+package handlers
 
 import (
 	"github.com/aerosystems/subs-service/internal/models"

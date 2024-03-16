@@ -8,8 +8,8 @@ package main
 
 import (
 	"github.com/aerosystems/subs-service/internal/config"
-	"github.com/aerosystems/subs-service/internal/http"
-	"github.com/aerosystems/subs-service/internal/infrastructure/rest"
+	"github.com/aerosystems/subs-service/internal/infrastructure/http"
+	"github.com/aerosystems/subs-service/internal/infrastructure/http/handlers"
 	"github.com/aerosystems/subs-service/internal/infrastructure/rpc"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/repository"
@@ -68,13 +68,13 @@ func ProvideRpcServer(log *logrus.Logger, subscriptionUsecase RpcServer.Subscrip
 	return server
 }
 
-func ProvidePaymentHandler(baseHandler *rest.BaseHandler, paymentUsecase rest.PaymentUsecase) *rest.PaymentHandler {
-	paymentHandler := rest.NewPaymentHandler(baseHandler, paymentUsecase)
+func ProvidePaymentHandler(baseHandler *handlers.BaseHandler, paymentUsecase handlers.PaymentUsecase) *handlers.PaymentHandler {
+	paymentHandler := handlers.NewPaymentHandler(baseHandler, paymentUsecase)
 	return paymentHandler
 }
 
-func ProvideSubscriptionHandler(baseHandler *rest.BaseHandler, subscriptionUsecase rest.SubscriptionUsecase) *rest.SubscriptionHandler {
-	subscriptionHandler := rest.NewSubscriptionHandler(baseHandler, subscriptionUsecase)
+func ProvideSubscriptionHandler(baseHandler *handlers.BaseHandler, subscriptionUsecase handlers.SubscriptionUsecase) *handlers.SubscriptionHandler {
+	subscriptionHandler := handlers.NewSubscriptionHandler(baseHandler, subscriptionUsecase)
 	return subscriptionHandler
 }
 
@@ -105,7 +105,7 @@ func ProvidePriceRepo() *repository.PriceRepo {
 
 // wire.go:
 
-func ProvideHttpServer(log *logrus.Logger, cfg *config.Config, subscriptionHandler *rest.SubscriptionHandler, paymentHandler *rest.PaymentHandler) *HttpServer.Server {
+func ProvideHttpServer(log *logrus.Logger, cfg *config.Config, subscriptionHandler *handlers.SubscriptionHandler, paymentHandler *handlers.PaymentHandler) *HttpServer.Server {
 	return HttpServer.NewServer(log, cfg.AccessSecret, subscriptionHandler, paymentHandler)
 }
 
@@ -125,8 +125,8 @@ func ProvideGormPostgres(e *logrus.Entry, cfg *config.Config) *gorm.DB {
 	return db
 }
 
-func ProvideBaseHandler(log *logrus.Logger, cfg *config.Config) *rest.BaseHandler {
-	return rest.NewBaseHandler(log, cfg.Mode)
+func ProvideBaseHandler(log *logrus.Logger, cfg *config.Config) *handlers.BaseHandler {
+	return handlers.NewBaseHandler(log, cfg.Mode)
 }
 
 func ProvidePaymentMap(monobankStrategy *usecases.MonobankStrategy) map[models.PaymentMethod]usecases.AcquiringOperations {

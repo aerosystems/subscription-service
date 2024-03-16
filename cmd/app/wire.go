@@ -5,8 +5,8 @@ package main
 
 import (
 	"github.com/aerosystems/subs-service/internal/config"
-	HttpServer "github.com/aerosystems/subs-service/internal/http"
-	"github.com/aerosystems/subs-service/internal/infrastructure/rest"
+	HttpServer "github.com/aerosystems/subs-service/internal/infrastructure/http"
+	"github.com/aerosystems/subs-service/internal/infrastructure/http/handlers"
 	RpcServer "github.com/aerosystems/subs-service/internal/infrastructure/rpc"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/repository"
@@ -24,8 +24,8 @@ import (
 func InitApp() *App {
 	panic(wire.Build(
 		wire.Bind(new(RpcServer.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
-		wire.Bind(new(rest.PaymentUsecase), new(*usecases.PaymentUsecase)),
-		wire.Bind(new(rest.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
+		wire.Bind(new(handlers.PaymentUsecase), new(*usecases.PaymentUsecase)),
+		wire.Bind(new(handlers.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
 		wire.Bind(new(usecases.SubscriptionRepository), new(*pg.SubscriptionRepo)),
 		wire.Bind(new(usecases.InvoiceRepository), new(*pg.InvoiceRepo)),
 		wire.Bind(new(usecases.PriceRepository), new(*repository.PriceRepo)),
@@ -64,7 +64,7 @@ func ProvideConfig() *config.Config {
 	panic(wire.Build(config.NewConfig))
 }
 
-func ProvideHttpServer(log *logrus.Logger, cfg *config.Config, subscriptionHandler *rest.SubscriptionHandler, paymentHandler *rest.PaymentHandler) *HttpServer.Server {
+func ProvideHttpServer(log *logrus.Logger, cfg *config.Config, subscriptionHandler *handlers.SubscriptionHandler, paymentHandler *handlers.PaymentHandler) *HttpServer.Server {
 	return HttpServer.NewServer(log, cfg.AccessSecret, subscriptionHandler, paymentHandler)
 }
 
@@ -88,16 +88,16 @@ func ProvideGormPostgres(e *logrus.Entry, cfg *config.Config) *gorm.DB {
 	return db
 }
 
-func ProvideBaseHandler(log *logrus.Logger, cfg *config.Config) *rest.BaseHandler {
-	return rest.NewBaseHandler(log, cfg.Mode)
+func ProvideBaseHandler(log *logrus.Logger, cfg *config.Config) *handlers.BaseHandler {
+	return handlers.NewBaseHandler(log, cfg.Mode)
 }
 
-func ProvidePaymentHandler(baseHandler *rest.BaseHandler, paymentUsecase rest.PaymentUsecase) *rest.PaymentHandler {
-	panic(wire.Build(rest.NewPaymentHandler))
+func ProvidePaymentHandler(baseHandler *handlers.BaseHandler, paymentUsecase handlers.PaymentUsecase) *handlers.PaymentHandler {
+	panic(wire.Build(handlers.NewPaymentHandler))
 }
 
-func ProvideSubscriptionHandler(baseHandler *rest.BaseHandler, subscriptionUsecase rest.SubscriptionUsecase) *rest.SubscriptionHandler {
-	panic(wire.Build(rest.NewSubscriptionHandler))
+func ProvideSubscriptionHandler(baseHandler *handlers.BaseHandler, subscriptionUsecase handlers.SubscriptionUsecase) *handlers.SubscriptionHandler {
+	panic(wire.Build(handlers.NewSubscriptionHandler))
 }
 
 func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo usecases.PriceRepository, strategies map[models.PaymentMethod]usecases.AcquiringOperations) *usecases.PaymentUsecase {
