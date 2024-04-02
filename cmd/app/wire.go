@@ -4,12 +4,15 @@
 package main
 
 import (
+	"cloud.google.com/go/firestore"
+	"context"
 	"github.com/aerosystems/subs-service/internal/config"
 	HttpServer "github.com/aerosystems/subs-service/internal/infrastructure/http"
 	"github.com/aerosystems/subs-service/internal/infrastructure/http/handlers"
 	RpcServer "github.com/aerosystems/subs-service/internal/infrastructure/rpc"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/repository"
+	"github.com/aerosystems/subs-service/internal/repository/fire"
 	"github.com/aerosystems/subs-service/internal/repository/pg"
 	"github.com/aerosystems/subs-service/internal/usecases"
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
@@ -132,4 +135,17 @@ func ProvideInvoiceRepo(client *gorm.DB) *pg.InvoiceRepo {
 
 func ProvidePriceRepo() *repository.PriceRepo {
 	panic(wire.Build(repository.NewPriceRepo))
+}
+
+func ProvideFirestoreClient(cfg *config.Config) *firestore.Client {
+	ctx := context.Background()
+	client, err := firestore.NewClient(ctx, cfg.GcpProjectId)
+	if err != nil {
+		panic(err)
+	}
+	return client
+}
+
+func ProvideFireSubscriptionRepo(client *firestore.Client) *fire.SubscriptionRepo {
+	panic(wire.Build(fire.NewSubscriptionRepo))
 }

@@ -13,6 +13,7 @@ type Config struct {
 	MonobankToken       string `mapstructure:"MONOBANK_TOKEN" required:"true"`
 	MonobankRedirectUrl string `mapstructure:"MONOBANK_REDIRECT_URL" required:"true"`
 	MonobankWebHookUrl  string `mapstructure:"MONOBANK_WEBHOOK_URL" required:"true"`
+	GcpProjectId        string `mapstructure:"GCP_PROJECT_ID" required:"true"`
 }
 
 func NewConfig() *Config {

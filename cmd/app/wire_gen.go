@@ -7,12 +7,15 @@
 package main
 
 import (
+	"cloud.google.com/go/firestore"
+	"context"
 	"github.com/aerosystems/subs-service/internal/config"
 	"github.com/aerosystems/subs-service/internal/infrastructure/http"
 	"github.com/aerosystems/subs-service/internal/infrastructure/http/handlers"
 	"github.com/aerosystems/subs-service/internal/infrastructure/rpc"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/repository"
+	"github.com/aerosystems/subs-service/internal/repository/fire"
 	"github.com/aerosystems/subs-service/internal/repository/pg"
 	"github.com/aerosystems/subs-service/internal/usecases"
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
@@ -103,6 +106,11 @@ func ProvidePriceRepo() *repository.PriceRepo {
 	return priceRepo
 }
 
+func ProvideFireSubscriptionRepo(client *firestore.Client) *fire.SubscriptionRepo {
+	subscriptionRepo := fire.NewSubscriptionRepo(client)
+	return subscriptionRepo
+}
+
 // wire.go:
 
 func ProvideHttpServer(log *logrus.Logger, cfg *config.Config, subscriptionHandler *handlers.SubscriptionHandler, paymentHandler *handlers.PaymentHandler) *HttpServer.Server {
@@ -139,4 +147,13 @@ func ProvideMonobankStrategy(acquiring *monobank.Acquiring, cfg *config.Config) 
 
 func ProvideMonobankAcquiring(cfg *config.Config) *monobank.Acquiring {
 	return monobank.NewAcquiring(cfg.MonobankToken)
+}
+
+func ProvideFirestoreClient(cfg *config.Config) *firestore.Client {
+	ctx := context.Background()
+	client, err := firestore.NewClient(ctx, cfg.GcpProjectId)
+	if err != nil {
+		panic(err)
+	}
+	return client
 }
