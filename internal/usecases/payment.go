@@ -43,7 +43,7 @@ type AcquiringOperations interface {
 	GetWebhookFromRequest(bodyBytes []byte, headers map[string][]string) (Webhook, error)
 }
 
-func (ps *PaymentUsecase) SetPaymentMethod(paymentMethod models.PaymentMethod) error {
+func (ps PaymentUsecase) SetPaymentMethod(paymentMethod models.PaymentMethod) error {
 	if _, ok := ps.strategies[paymentMethod]; !ok {
 		return fmt.Errorf("invalid payment method")
 	}
@@ -51,7 +51,7 @@ func (ps *PaymentUsecase) SetPaymentMethod(paymentMethod models.PaymentMethod) e
 	return nil
 }
 
-func (ps *PaymentUsecase) GetPaymentUrl(userUuid uuid.UUID, subscription models.KindSubscription, duration models.DurationSubscription) (string, error) {
+func (ps PaymentUsecase) GetPaymentUrl(userUuid uuid.UUID, subscription models.KindSubscription, duration models.DurationSubscription) (string, error) {
 	amount, err := ps.priceRepo.GetPrice(subscription, duration)
 	if err != nil {
 		return "", err
@@ -75,7 +75,7 @@ func (ps *PaymentUsecase) GetPaymentUrl(userUuid uuid.UUID, subscription models.
 	return invoice.AcquiringPageUrl, nil
 }
 
-func (ps *PaymentUsecase) ProcessingWebhookPayment(bodyBytes []byte, headers map[string][]string) error {
+func (ps PaymentUsecase) ProcessingWebhookPayment(bodyBytes []byte, headers map[string][]string) error {
 	webhook, err := ps.acquiring.GetWebhookFromRequest(bodyBytes, headers)
 	if err != nil {
 		return err

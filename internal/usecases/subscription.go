@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"context"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/google/uuid"
 	"time"
@@ -28,23 +29,27 @@ func NewSubscription(userUuid uuid.UUID, kind models.KindSubscription, accessTim
 	}
 }
 
-func (ss *SubscriptionUsecase) GetPrices() map[models.KindSubscription]map[models.DurationSubscription]int {
+func (ss SubscriptionUsecase) GetPrices() map[models.KindSubscription]map[models.DurationSubscription]int {
 	return ss.priceRepo.GetAll()
 }
 
-func (ss *SubscriptionUsecase) CreateFreeTrial(userUuid uuid.UUID, kind models.KindSubscription) error {
+func (ss SubscriptionUsecase) CreateFreeTrial(userUuid uuid.UUID, kind models.KindSubscription) error {
 	sub := NewSubscription(userUuid, kind, time.Now().Add(time.Second*defaultTimeDuration))
-	return ss.subsRepo.Create(sub)
+	ctx := context.Background()
+	return ss.subsRepo.Create(ctx, sub)
 }
 
-func (ss *SubscriptionUsecase) GetSubscription(userUuid uuid.UUID) (*models.Subscription, error) {
-	return ss.subsRepo.GetByUserUuid(userUuid)
+func (ss SubscriptionUsecase) GetSubscription(userUuid uuid.UUID) (*models.Subscription, error) {
+	ctx := context.Background()
+	return ss.subsRepo.GetByUserUuid(ctx, userUuid)
 }
 
-func (ss *SubscriptionUsecase) DeleteSubscription(userUuid uuid.UUID) error {
-	sub, err := ss.subsRepo.GetByUserUuid(userUuid)
+func (ss SubscriptionUsecase) DeleteSubscription(userUuid uuid.UUID) error {
+	ctx := context.Background()
+	sub, err := ss.subsRepo.GetByUserUuid(ctx, userUuid)
 	if err != nil {
 		return err
 	}
-	return ss.subsRepo.Delete(sub)
+	ctx = context.Background()
+	return ss.subsRepo.Delete(ctx, sub)
 }

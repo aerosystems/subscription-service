@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"context"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/google/uuid"
 )
@@ -15,10 +16,10 @@ type InvoiceRepository interface {
 }
 
 type SubscriptionRepository interface {
-	Create(subscription *models.Subscription) error
-	GetByUserUuid(userUuid uuid.UUID) (*models.Subscription, error)
-	Update(subscription *models.Subscription) error
-	Delete(subscription *models.Subscription) error
+	Create(ctx context.Context, subscription *models.Subscription) error
+	GetByUserUuid(ctx context.Context, userUuid uuid.UUID) (*models.Subscription, error)
+	Update(ctx context.Context, subscription *models.Subscription) error
+	Delete(ctx context.Context, subscription *models.Subscription) error
 }
 
 type PriceRepository interface {

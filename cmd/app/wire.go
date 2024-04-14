@@ -29,7 +29,7 @@ func InitApp() *App {
 		wire.Bind(new(RpcServer.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
 		wire.Bind(new(handlers.PaymentUsecase), new(*usecases.PaymentUsecase)),
 		wire.Bind(new(handlers.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
-		wire.Bind(new(usecases.SubscriptionRepository), new(*pg.SubscriptionRepo)),
+		wire.Bind(new(usecases.SubscriptionRepository), new(*fire.SubscriptionRepo)),
 		wire.Bind(new(usecases.InvoiceRepository), new(*pg.InvoiceRepo)),
 		wire.Bind(new(usecases.PriceRepository), new(*repository.PriceRepo)),
 		ProvideApp,
@@ -48,9 +48,11 @@ func InitApp() *App {
 		ProvideMonobankStrategy,
 		ProvideMonobankAcquiring,
 		ProvideSubscriptionUsecase,
-		ProvideSubscriptionRepo,
+		//ProvideSubscriptionRepo,
 		ProvideInvoiceRepo,
 		ProvidePriceRepo,
+		ProvideFirestoreClient,
+		ProvideFireSubscriptionRepo,
 	),
 	)
 }
@@ -85,7 +87,7 @@ func ProvideLogrusLogger(log *logger.Logger) *logrus.Logger {
 
 func ProvideGormPostgres(e *logrus.Entry, cfg *config.Config) *gorm.DB {
 	db := GormPostgres.NewClient(e, cfg.PostgresDSN)
-	if err := db.AutoMigrate(models.Subscription{}, models.Invoice{}); err != nil { // TODO: Move to migration
+	if err := db.AutoMigrate(pg.Subscription{}, models.Invoice{}); err != nil { // TODO: Move to migration
 		panic(err)
 	}
 	return db

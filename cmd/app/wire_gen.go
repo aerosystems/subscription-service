@@ -33,12 +33,13 @@ func InitApp() *App {
 	logrusLogger := ProvideLogrusLogger(logger)
 	config := ProvideConfig()
 	baseHandler := ProvideBaseHandler(logrusLogger, config)
-	entry := ProvideLogrusEntry(logger)
-	db := ProvideGormPostgres(entry, config)
-	subscriptionRepo := ProvideSubscriptionRepo(db)
+	client := ProvideFirestoreClient(config)
+	subscriptionRepo := ProvideFireSubscriptionRepo(client)
 	priceRepo := ProvidePriceRepo()
 	subscriptionUsecase := ProvideSubscriptionUsecase(subscriptionRepo, priceRepo)
 	subscriptionHandler := ProvideSubscriptionHandler(baseHandler, subscriptionUsecase)
+	entry := ProvideLogrusEntry(logger)
+	db := ProvideGormPostgres(entry, config)
 	invoiceRepo := ProvideInvoiceRepo(db)
 	acquiring := ProvideMonobankAcquiring(config)
 	monobankStrategy := ProvideMonobankStrategy(acquiring, config)
@@ -127,7 +128,7 @@ func ProvideLogrusLogger(log *logger.Logger) *logrus.Logger {
 
 func ProvideGormPostgres(e *logrus.Entry, cfg *config.Config) *gorm.DB {
 	db := GormPostgres.NewClient(e, cfg.PostgresDSN)
-	if err := db.AutoMigrate(models.Subscription{}, models.Invoice{}); err != nil {
+	if err := db.AutoMigrate(pg.Subscription{}, models.Invoice{}); err != nil {
 		panic(err)
 	}
 	return db

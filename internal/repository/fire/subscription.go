@@ -3,6 +3,15 @@ package fire
 import (
 	"cloud.google.com/go/firestore"
 	"context"
+	"errors"
+	"github.com/aerosystems/subs-service/internal/models"
+	"github.com/google/uuid"
+	"google.golang.org/api/iterator"
+	"time"
+)
+
+const (
+	defaultTimeout = 2 * time.Second
 )
 
 type SubscriptionRepo struct {
@@ -15,45 +24,81 @@ func NewSubscriptionRepo(client *firestore.Client) *SubscriptionRepo {
 	}
 }
 
-func (r *SubscriptionRepo) GetByUserUuid(ctx context.Context, userUuid string) ([]map[string]interface{}, error) {
-	var subscriptions []map[string]interface{}
+type SubscriptionFire struct {
+	UserUuid   string    `firestore:"user_uuid"`
+	Kind       string    `firestore:"kind"`
+	Duration   string    `firestore:"duration"`
+	AccessTime time.Time `firestore:"access_time"`
+	CreatedAt  time.Time `firestore:"created_at"`
+	UpdatedAt  time.Time `firestore:"updated_at"`
+}
 
-	iter := r.client.Collection("subscriptions").Where("UserUuid", "==", userUuid).Documents(ctx)
-	defer iter.Stop()
+func (s *SubscriptionFire) ToModel() *models.Subscription {
+	return &models.Subscription{
+		UserUuid:   uuid.MustParse(s.UserUuid),
+		Kind:       models.NewKindSubscription(s.Kind),
+		Duration:   models.NewDurationSubscription(s.Duration),
+		AccessTime: s.AccessTime,
+		CreatedAt:  s.CreatedAt,
+		UpdatedAt:  s.UpdatedAt,
+	}
+}
 
+func ModelToSubscriptionFire(subscription *models.Subscription) *SubscriptionFire {
+	return &SubscriptionFire{
+		UserUuid:   subscription.UserUuid.String(),
+		Kind:       subscription.Kind.String(),
+		Duration:   subscription.Duration.String(),
+		AccessTime: subscription.AccessTime,
+		CreatedAt:  subscription.CreatedAt,
+		UpdatedAt:  subscription.UpdatedAt,
+	}
+}
+
+func (r *SubscriptionRepo) GetByUserUuid(ctx context.Context, userUuid uuid.UUID) (*models.Subscription, error) {
+	c, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+	var subscription SubscriptionFire
+	iter := r.client.Collection("subscriptions").Where("UserUuid", "==", userUuid.String()).Documents(c)
 	for {
 		doc, err := iter.Next()
-		if err != nil {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
-
-		subscriptions = append(subscriptions, doc.Data())
+		if err != nil {
+			return nil, errors.New("could not get subscription")
+		}
+		doc.DataTo(&subscription)
 	}
-
-	return subscriptions, nil
+	return subscription.ToModel(), nil
 }
 
-func (r *SubscriptionRepo) GetByUuid(ctx context.Context, uuid string) (map[string]interface{}, error) {
-	docRef := r.client.Collection("subscriptions").Doc(uuid)
-	doc, err := docRef.Get(ctx)
+func (r *SubscriptionRepo) Create(ctx context.Context, subscription *models.Subscription) error {
+	c, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+	_, err := r.client.Collection("subscriptions").Doc(subscription.UserUuid.String()).Set(c, ModelToSubscriptionFire(subscription))
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	return doc.Data(), nil
+	return nil
 }
 
-func (r *SubscriptionRepo) Create(ctx context.Context, subscription map[string]interface{}) error {
-	_, err := r.client.Collection("subscriptions").Doc(subscription["Uuid"].(string)).Set(ctx, subscription)
-	return err
+func (r *SubscriptionRepo) Update(ctx context.Context, subscription *models.Subscription) error {
+	c, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+	_, err := r.client.Collection("subscriptions").Doc(subscription.UserUuid.String()).Set(c, ModelToSubscriptionFire(subscription))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (r *SubscriptionRepo) Update(ctx context.Context, subscription map[string]interface{}) error {
-	_, err := r.client.Collection("subscriptions").Doc(subscription["Uuid"].(string)).Set(ctx, subscription)
-	return err
-}
-
-func (r *SubscriptionRepo) Delete(ctx context.Context, subscription map[string]interface{}) error {
-	_, err := r.client.Collection("subscriptions").Doc(subscription["Uuid"].(string)).Delete(ctx)
-	return err
+func (r *SubscriptionRepo) Delete(ctx context.Context, subscription *models.Subscription) error {
+	c, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+	_, err := r.client.Collection("subscriptions").Doc(ModelToSubscriptionFire(subscription).UserUuid).Delete(c)
+	if err != nil {
+		return err
+	}
+	return nil
 }

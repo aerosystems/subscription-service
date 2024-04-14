@@ -8,13 +8,13 @@ import (
 
 type SubsRPCPayload struct {
 	UserUuid   uuid.UUID
-	Kind       models.KindSubscription
+	Kind       string
 	AccessTime time.Time
 }
 
 func (s Server) CreateFreeTrial(payload SubsRPCPayload, resp *string) error {
 	*resp = "ok"
-	return s.subscriptionUsecase.CreateFreeTrial(payload.UserUuid, payload.Kind)
+	return s.subscriptionUsecase.CreateFreeTrial(payload.UserUuid, models.NewKindSubscription(payload.Kind))
 }
 
 func (s Server) GetSubscription(userUuid uuid.UUID, resp *SubsRPCPayload) error {
@@ -22,7 +22,7 @@ func (s Server) GetSubscription(userUuid uuid.UUID, resp *SubsRPCPayload) error 
 	if err != nil {
 		return err
 	}
-	resp.Kind = sub.Kind
+	resp.Kind = sub.Kind.String()
 	resp.AccessTime = sub.AccessTime
 	return nil
 }
