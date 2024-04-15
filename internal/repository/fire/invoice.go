@@ -18,7 +18,7 @@ func NewInvoiceRepo(client *firestore.Client) *InvoiceRepo {
 func (r *InvoiceRepo) GetByUserUuid(ctx context.Context, userUuid string) ([]map[string]interface{}, error) {
 	var invoices []map[string]interface{}
 
-	iter := r.client.Collection("invoices").Where("UserUuid", "==", userUuid).Documents(ctx)
+	iter := r.client.Collection("invoices").Where("user_uuid", "==", userUuid).Documents(ctx)
 	defer iter.Stop()
 
 	for {
@@ -44,7 +44,7 @@ func (r *InvoiceRepo) GetByUuid(ctx context.Context, uuid string) (map[string]in
 }
 
 func (r *InvoiceRepo) Create(ctx context.Context, invoice map[string]interface{}) error {
-	_, err := r.client.Collection("invoices").Doc(invoice["Uuid"].(string)).Set(ctx, invoice)
+	_, err := r.client.Collection("invoices").Doc(invoice["uuid"].(string)).Set(ctx, invoice)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (r *InvoiceRepo) Create(ctx context.Context, invoice map[string]interface{}
 }
 
 func (r *InvoiceRepo) Update(ctx context.Context, invoice map[string]interface{}) error {
-	_, err := r.client.Collection("invoices").Doc(invoice["Uuid"].(string)).Set(ctx, invoice)
+	_, err := r.client.Collection("invoices").Doc(invoice["uuid"].(string)).Set(ctx, invoice)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (r *InvoiceRepo) Update(ctx context.Context, invoice map[string]interface{}
 }
 
 func (r *InvoiceRepo) Delete(ctx context.Context, invoice map[string]interface{}) error {
-	_, err := r.client.Collection("invoices").Doc(invoice["Uuid"].(string)).Delete(ctx)
+	_, err := r.client.Collection("invoices").Doc(invoice["uuid"].(string)).Delete(ctx)
 	if err != nil {
 		return err
 	}

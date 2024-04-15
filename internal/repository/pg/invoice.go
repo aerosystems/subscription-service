@@ -5,6 +5,7 @@ import (
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"time"
 )
 
 type InvoiceRepo struct {
@@ -13,6 +14,46 @@ type InvoiceRepo struct {
 
 func NewInvoiceRepo(db *gorm.DB) *InvoiceRepo {
 	return &InvoiceRepo{db: db}
+}
+
+type Invoice struct {
+	Id                 int       `gorm:"primaryKey;autoIncrement"`
+	Amount             int       `gorm:"<-"`
+	UserUuid           uuid.UUID `gorm:"<-"`
+	InvoiceUuid        uuid.UUID `gorm:"unique"`
+	PaymentMethod      string    `gorm:"<-"`
+	AcquiringInvoiceId string    `gorm:"<-"`
+	PaymentStatus      string    `gorm:"<-"`
+	CreatedAt          time.Time `gorm:"autoCreateTime"`
+	UpdatedAt          time.Time `gorm:"autoUpdateTime"`
+}
+
+func (i Invoice) ToModel() models.Invoice {
+	return models.Invoice{
+		Id:                 i.Id,
+		Amount:             i.Amount,
+		UserUuid:           i.UserUuid,
+		InvoiceUuid:        i.InvoiceUuid,
+		PaymentMethod:      models.NewPaymentMethod(i.PaymentMethod),
+		AcquiringInvoiceId: i.AcquiringInvoiceId,
+		PaymentStatus:      models.NewPaymentStatus(i.PaymentStatus),
+		CreatedAt:          i.CreatedAt,
+		UpdatedAt:          i.UpdatedAt,
+	}
+}
+
+func ModelToInvoiceFire(invoice models.Invoice) Invoice {
+	return Invoice{
+		Id:                 invoice.Id,
+		Amount:             invoice.Amount,
+		UserUuid:           invoice.UserUuid,
+		InvoiceUuid:        invoice.InvoiceUuid,
+		PaymentMethod:      invoice.PaymentMethod.String(),
+		AcquiringInvoiceId: invoice.AcquiringInvoiceId,
+		PaymentStatus:      invoice.PaymentStatus.String(),
+		CreatedAt:          invoice.CreatedAt,
+		UpdatedAt:          invoice.UpdatedAt,
+	}
 }
 
 func (i *InvoiceRepo) Create(invoice *models.Invoice) error {

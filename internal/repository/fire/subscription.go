@@ -59,7 +59,7 @@ func (r *SubscriptionRepo) GetByUserUuid(ctx context.Context, userUuid uuid.UUID
 	c, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 	var subscription SubscriptionFire
-	iter := r.client.Collection("subscriptions").Where("UserUuid", "==", userUuid.String()).Documents(c)
+	iter := r.client.Collection("subscriptions").Where("user_uuid", "==", userUuid.String()).Documents(c)
 	for {
 		doc, err := iter.Next()
 		if errors.Is(err, iterator.Done) {
