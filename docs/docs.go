@@ -57,7 +57,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.InvoiceRequest"
+                            "$ref": "#/definitions/handlers.InvoiceRequest"
                         }
                     }
                 ],
@@ -67,13 +67,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/rest.Response"
+                                    "$ref": "#/definitions/handlers.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/rest.InvoiceResponse"
+                                            "$ref": "#/definitions/handlers.InvoiceResponse"
                                         }
                                     }
                                 }
@@ -83,25 +83,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/rest.Response"
+                            "$ref": "#/definitions/handlers.Response"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/rest.Response"
+                            "$ref": "#/definitions/handlers.Response"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/rest.Response"
+                            "$ref": "#/definitions/handlers.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/rest.Response"
+                            "$ref": "#/definitions/handlers.Response"
                         }
                     }
                 }
@@ -126,7 +126,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/rest.Response"
+                                    "$ref": "#/definitions/handlers.Response"
                                 },
                                 {
                                     "type": "object",
@@ -148,7 +148,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/rest.Response"
+                            "$ref": "#/definitions/handlers.Response"
                         }
                     }
                 }
@@ -178,7 +178,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/rest.Response"
+                                    "$ref": "#/definitions/handlers.Response"
                                 },
                                 {
                                     "type": "object",
@@ -194,13 +194,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/rest.Response"
+                            "$ref": "#/definitions/handlers.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/rest.Response"
+                            "$ref": "#/definitions/handlers.Response"
                         }
                     }
                 }
@@ -208,29 +208,32 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handlers.InvoiceRequest": {
+            "type": "object"
+        },
+        "handlers.InvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "paymentUrl": {
+                    "type": "string",
+                    "example": "https://api.monobank.ua"
+                }
+            }
+        },
+        "handlers.Response": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "models.DurationSubscription": {
-            "type": "string",
-            "enum": [
-                "1m",
-                "12m"
-            ],
-            "x-enum-varnames": [
-                "OneMonthDurationSubscription",
-                "TwelveMonthDurationSubscription"
-            ]
+            "type": "object"
         },
         "models.KindSubscription": {
-            "type": "string",
-            "enum": [
-                "trial",
-                "startup",
-                "business"
-            ],
-            "x-enum-varnames": [
-                "TrialSubscription",
-                "StartupSubscription",
-                "BusinessSubscription"
-            ]
+            "type": "object"
         },
         "models.Subscription": {
             "type": "object",
@@ -244,56 +247,10 @@ const docTemplate = `{
                 "duration": {
                     "$ref": "#/definitions/models.DurationSubscription"
                 },
-                "id": {
-                    "type": "integer"
-                },
                 "kind": {
                     "$ref": "#/definitions/models.KindSubscription"
                 },
                 "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "rest.InvoiceRequest": {
-            "type": "object",
-            "required": [
-                "durationSubscription",
-                "kindSubscription"
-            ],
-            "properties": {
-                "durationSubscription": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.DurationSubscription"
-                        }
-                    ],
-                    "example": "12m"
-                },
-                "kindSubscription": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.KindSubscription"
-                        }
-                    ],
-                    "example": "business"
-                }
-            }
-        },
-        "rest.InvoiceResponse": {
-            "type": "object",
-            "properties": {
-                "paymentUrl": {
-                    "type": "string",
-                    "example": "https://api.monobank.ua"
-                }
-            }
-        },
-        "rest.Response": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "message": {
                     "type": "string"
                 }
             }
