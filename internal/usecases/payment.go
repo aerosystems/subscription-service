@@ -87,7 +87,7 @@ func (ps PaymentUsecase) ProcessingWebhookPayment(bodyBytes []byte, headers map[
 	if invoice.UpdatedAt.After(webhook.ModifiedDate) { // to prevent not actual webhook
 		return nil
 	}
-	invoice.PaymentStatus = models.PaymentStatus(webhook.Status)
+	invoice.PaymentStatus = models.NewPaymentStatus(webhook.Status)
 	invoice.UpdatedAt = webhook.ModifiedDate
 	if err := ps.invoiceRepo.Update(invoice); err != nil {
 		return err

@@ -24,7 +24,7 @@ func NewPaymentHandler(
 }
 
 func (ph PaymentHandler) WebhookPayment(c echo.Context) error {
-	method := models.PaymentMethod(c.Param("payment_method"))
+	method := models.NewPaymentMethod(c.Param("payment_method"))
 	if err := ph.paymentUsecase.SetPaymentMethod(method); err != nil {
 		return ph.ErrorResponse(c, http.StatusBadRequest, "invalid payment method", err)
 	}
@@ -64,7 +64,7 @@ type InvoiceResponse struct {
 // @Router /v1/invoices/{payment_method} [post]
 func (ph PaymentHandler) CreateInvoice(c echo.Context) error {
 	accessTokenClaims := c.Get("accessTokenClaims").(*models.AccessTokenClaims)
-	method := models.PaymentMethod(c.Param("payment_method"))
+	method := models.NewPaymentMethod(c.Param("payment_method"))
 	if err := ph.paymentUsecase.SetPaymentMethod(method); err != nil {
 		return ph.ErrorResponse(c, http.StatusBadRequest, "invalid payment method", err)
 	}

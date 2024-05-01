@@ -92,7 +92,7 @@ func ProvideLogrusLogger(log *logger.Logger) *logrus.Logger {
 
 func ProvideGormPostgres(e *logrus.Entry, cfg *config.Config) *gorm.DB {
 	db := GormPostgres.NewClient(e, cfg.PostgresDSN)
-	if err := db.AutoMigrate(pg.Subscription{}, models.Invoice{}); err != nil { // TODO: Move to migration
+	if err := db.AutoMigrate(pg.Subscription{}, pg.Invoice{}); err != nil { // TODO: Move to migration
 		panic(err)
 	}
 	return db
