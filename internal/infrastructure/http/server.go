@@ -3,6 +3,7 @@ package HttpServer
 import (
 	"fmt"
 	"github.com/aerosystems/subs-service/internal/infrastructure/http/handlers"
+	"github.com/aerosystems/subs-service/internal/infrastructure/http/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
@@ -10,26 +11,26 @@ import (
 const webPort = 80
 
 type Server struct {
-	log                 *logrus.Logger
-	echo                *echo.Echo
-	accessSecret        string
-	subscriptionHandler *handlers.SubscriptionHandler
-	paymentHandler      *handlers.PaymentHandler
+	log                    *logrus.Logger
+	echo                   *echo.Echo
+	firebaseAuthMiddleware *middleware.FirebaseAuth
+	subscriptionHandler    *handlers.SubscriptionHandler
+	paymentHandler         *handlers.PaymentHandler
 }
 
 func NewServer(
 	log *logrus.Logger,
-	accessSecret string,
+	firebaseAuthMiddleware *middleware.FirebaseAuth,
 	subscriptionHandler *handlers.SubscriptionHandler,
 	paymentHandler *handlers.PaymentHandler,
 
 ) *Server {
 	return &Server{
-		log:                 log,
-		echo:                echo.New(),
-		accessSecret:        accessSecret,
-		subscriptionHandler: subscriptionHandler,
-		paymentHandler:      paymentHandler,
+		log:                    log,
+		echo:                   echo.New(),
+		firebaseAuthMiddleware: firebaseAuthMiddleware,
+		subscriptionHandler:    subscriptionHandler,
+		paymentHandler:         paymentHandler,
 	}
 }
 

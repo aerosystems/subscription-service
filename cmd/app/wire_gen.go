@@ -9,15 +9,18 @@ package main
 import (
 	"cloud.google.com/go/firestore"
 	"context"
+	"firebase.google.com/go/auth"
 	"github.com/aerosystems/subs-service/internal/config"
 	"github.com/aerosystems/subs-service/internal/infrastructure/http"
 	"github.com/aerosystems/subs-service/internal/infrastructure/http/handlers"
+	"github.com/aerosystems/subs-service/internal/infrastructure/http/middleware"
 	"github.com/aerosystems/subs-service/internal/infrastructure/rpc"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/repository"
 	"github.com/aerosystems/subs-service/internal/repository/fire"
 	"github.com/aerosystems/subs-service/internal/repository/pg"
 	"github.com/aerosystems/subs-service/internal/usecases"
+	"github.com/aerosystems/subs-service/pkg/firebase"
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
 	"github.com/aerosystems/subs-service/pkg/monobank"
@@ -32,9 +35,11 @@ func InitApp() *App {
 	logger := ProvideLogger()
 	logrusLogger := ProvideLogrusLogger(logger)
 	config := ProvideConfig()
+	client := ProvideFirebaseAuthClient(config)
+	firebaseAuth := ProvideFirebaseAuthMiddleware(client)
 	baseHandler := ProvideBaseHandler(logrusLogger, config)
-	client := ProvideFirestoreClient(config)
-	subscriptionRepo := ProvideFireSubscriptionRepo(client)
+	firestoreClient := ProvideFirestoreClient(config)
+	subscriptionRepo := ProvideFireSubscriptionRepo(firestoreClient)
 	priceRepo := ProvidePriceRepo()
 	subscriptionUsecase := ProvideSubscriptionUsecase(subscriptionRepo, priceRepo)
 	subscriptionHandler := ProvideSubscriptionHandler(baseHandler, subscriptionUsecase)
@@ -46,7 +51,7 @@ func InitApp() *App {
 	v := ProvidePaymentMap(monobankStrategy)
 	paymentUsecase := ProvidePaymentUsecase(invoiceRepo, priceRepo, v)
 	paymentHandler := ProvidePaymentHandler(baseHandler, paymentUsecase)
-	server := ProvideHttpServer(logrusLogger, config, subscriptionHandler, paymentHandler)
+	server := ProvideHttpServer(logrusLogger, firebaseAuth, subscriptionHandler, paymentHandler)
 	rpcServerServer := ProvideRpcServer(logrusLogger, subscriptionUsecase)
 	app := ProvideApp(logrusLogger, config, server, rpcServerServer)
 	return app
@@ -114,8 +119,8 @@ func ProvideFireSubscriptionRepo(client *firestore.Client) *fire.SubscriptionRep
 
 // wire.go:
 
-func ProvideHttpServer(log *logrus.Logger, cfg *config.Config, subscriptionHandler *handlers.SubscriptionHandler, paymentHandler *handlers.PaymentHandler) *HttpServer.Server {
-	return HttpServer.NewServer(log, cfg.AccessSecret, subscriptionHandler, paymentHandler)
+func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.FirebaseAuth, subscriptionHandler *handlers.SubscriptionHandler, paymentHandler *handlers.PaymentHandler) *HttpServer.Server {
+	return HttpServer.NewServer(log, firebaseAuthMiddleware, subscriptionHandler, paymentHandler)
 }
 
 func ProvideLogrusEntry(log *logger.Logger) *logrus.Entry {
@@ -157,4 +162,16 @@ func ProvideFirestoreClient(cfg *config.Config) *firestore.Client {
 		panic(err)
 	}
 	return client
+}
+
+func ProvideFirebaseAuthMiddleware(client *auth.Client) *middleware.FirebaseAuth {
+	return middleware.NewFirebaseAuth(client)
+}
+
+func ProvideFirebaseAuthClient(cfg *config.Config) *auth.Client {
+	app, err := firebaseApp.NewApp(cfg.GcpProjectId, cfg.GcpServiceAccountFilePath)
+	if err != nil {
+		panic(err)
+	}
+	return app.Client
 }

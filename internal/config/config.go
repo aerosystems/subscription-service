@@ -7,13 +7,14 @@ import (
 )
 
 type Config struct {
-	Mode                string `mapstructure:"MODE" required:"true"`
-	PostgresDSN         string `mapstructure:"POSTGRES_DSN" required:"true"`
-	AccessSecret        string `mapstructure:"ACCESS_SECRET" required:"true"`
-	MonobankToken       string `mapstructure:"MONOBANK_TOKEN" required:"true"`
-	MonobankRedirectUrl string `mapstructure:"MONOBANK_REDIRECT_URL" required:"true"`
-	MonobankWebHookUrl  string `mapstructure:"MONOBANK_WEBHOOK_URL" required:"true"`
-	GcpProjectId        string `mapstructure:"GCP_PROJECT_ID" required:"true"`
+	Mode                      string `mapstructure:"MODE" required:"true"`
+	PostgresDSN               string `mapstructure:"POSTGRES_DSN" required:"true"`
+	AccessSecret              string `mapstructure:"ACCESS_SECRET" required:"true"`
+	MonobankToken             string `mapstructure:"MONOBANK_TOKEN" required:"true"`
+	MonobankRedirectUrl       string `mapstructure:"MONOBANK_REDIRECT_URL" required:"true"`
+	MonobankWebHookUrl        string `mapstructure:"MONOBANK_WEBHOOK_URL" required:"true"`
+	GcpProjectId              string `mapstructure:"GCP_PROJECT_ID" required:"true"`
+	GcpServiceAccountFilePath string `mapstructure:"GCP_SERVICE_ACCOUNT_FILE_PATH" required:"true"`
 }
 
 func NewConfig() *Config {

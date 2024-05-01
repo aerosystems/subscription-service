@@ -6,15 +6,18 @@ package main
 import (
 	"cloud.google.com/go/firestore"
 	"context"
+	"firebase.google.com/go/auth"
 	"github.com/aerosystems/subs-service/internal/config"
 	HttpServer "github.com/aerosystems/subs-service/internal/infrastructure/http"
 	"github.com/aerosystems/subs-service/internal/infrastructure/http/handlers"
+	"github.com/aerosystems/subs-service/internal/infrastructure/http/middleware"
 	RpcServer "github.com/aerosystems/subs-service/internal/infrastructure/rpc"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/aerosystems/subs-service/internal/repository"
 	"github.com/aerosystems/subs-service/internal/repository/fire"
 	"github.com/aerosystems/subs-service/internal/repository/pg"
 	"github.com/aerosystems/subs-service/internal/usecases"
+	"github.com/aerosystems/subs-service/pkg/firebase"
 	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
 	"github.com/aerosystems/subs-service/pkg/monobank"
@@ -53,6 +56,8 @@ func InitApp() *App {
 		ProvidePriceRepo,
 		ProvideFirestoreClient,
 		ProvideFireSubscriptionRepo,
+		ProvideFirebaseAuthMiddleware,
+		ProvideFirebaseAuthClient,
 	),
 	)
 }
@@ -69,8 +74,8 @@ func ProvideConfig() *config.Config {
 	panic(wire.Build(config.NewConfig))
 }
 
-func ProvideHttpServer(log *logrus.Logger, cfg *config.Config, subscriptionHandler *handlers.SubscriptionHandler, paymentHandler *handlers.PaymentHandler) *HttpServer.Server {
-	return HttpServer.NewServer(log, cfg.AccessSecret, subscriptionHandler, paymentHandler)
+func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.FirebaseAuth, subscriptionHandler *handlers.SubscriptionHandler, paymentHandler *handlers.PaymentHandler) *HttpServer.Server {
+	return HttpServer.NewServer(log, firebaseAuthMiddleware, subscriptionHandler, paymentHandler)
 }
 
 func ProvideRpcServer(log *logrus.Logger, subscriptionUsecase RpcServer.SubscriptionUsecase) *RpcServer.Server {
@@ -150,4 +155,16 @@ func ProvideFirestoreClient(cfg *config.Config) *firestore.Client {
 
 func ProvideFireSubscriptionRepo(client *firestore.Client) *fire.SubscriptionRepo {
 	panic(wire.Build(fire.NewSubscriptionRepo))
+}
+
+func ProvideFirebaseAuthMiddleware(client *auth.Client) *middleware.FirebaseAuth {
+	return middleware.NewFirebaseAuth(client)
+}
+
+func ProvideFirebaseAuthClient(cfg *config.Config) *auth.Client {
+	app, err := firebaseApp.NewApp(cfg.GcpProjectId, cfg.GcpServiceAccountFilePath)
+	if err != nil {
+		panic(err)
+	}
+	return app.Client
 }
