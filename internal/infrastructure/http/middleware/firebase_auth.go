@@ -5,6 +5,7 @@ import (
 	"firebase.google.com/go/auth"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"net/http"
 )
 
@@ -22,13 +23,14 @@ func (fa FirebaseAuth) RoleBased(roles ...models.KindRole) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			ctx := c.Request().Context()
-			authHeader, err := getAuthHeader(c.Request())
+			jwt, err := getTokenFromHeader(c.Request())
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 			}
 
-			token, err := fa.client.VerifyIDToken(c.Request().Context(), authHeader)
+			token, err := fa.client.VerifyIDToken(ctx, jwt)
 			if err != nil {
+				log.Info(err)
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid token")
 			}
 
@@ -37,10 +39,8 @@ func (fa FirebaseAuth) RoleBased(roles ...models.KindRole) echo.MiddlewareFunc {
 			//}
 
 			ctx = context.WithValue(ctx, userContextKey, User{
-				Uuid:        token.UID,
-				Email:       token.Claims["email"].(string),
-				Role:        token.Claims["role"].(string),
-				DisplayName: token.Claims["name"].(string),
+				Uuid:  token.UID,
+				Email: token.Claims["email"].(string),
 			})
 
 			c.SetRequest(c.Request().WithContext(ctx))

@@ -6,12 +6,12 @@ import (
 )
 
 type Subscription struct {
-	UserUuid   uuid.UUID            `json:"-"`
-	Kind       KindSubscription     `json:"kind"`
-	Duration   DurationSubscription `json:"duration"`
-	AccessTime time.Time            `json:"accessTime"`
-	CreatedAt  time.Time            `json:"createdAt"`
-	UpdatedAt  time.Time            `json:"updatedAt"`
+	UserUuid   uuid.UUID
+	Kind       KindSubscription
+	Duration   DurationSubscription
+	AccessTime time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type KindSubscription struct {

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/aerosystems/subs-service/internal/infrastructure/http/middleware"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -63,7 +64,7 @@ type InvoiceResponse struct {
 // @Failure 500 {object} Response
 // @Router /v1/invoices/{payment_method} [post]
 func (ph PaymentHandler) CreateInvoice(c echo.Context) error {
-	accessTokenClaims := c.Get("accessTokenClaims").(*models.AccessTokenClaims)
+	accessTokenClaims := c.Get("accessTokenClaims").(*middleware.AccessTokenClaims)
 	method := models.NewPaymentMethod(c.Param("payment_method"))
 	if err := ph.paymentUsecase.SetPaymentMethod(method); err != nil {
 		return ph.ErrorResponse(c, http.StatusBadRequest, "invalid payment method", err)

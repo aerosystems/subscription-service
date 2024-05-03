@@ -6,13 +6,13 @@ import (
 )
 
 type Invoice struct {
-	Id                 int           `json:"id" gorm:"primaryKey;autoIncrement"`
-	Amount             int           `json:"amount"`
-	UserUuid           uuid.UUID     `json:"userUuid"`
-	InvoiceUuid        uuid.UUID     `json:"invoiceUuid" gorm:"unique"`
-	PaymentMethod      PaymentMethod `json:"paymentMethod"`
-	AcquiringInvoiceId string        `json:"acquiringInvoiceId"`
-	PaymentStatus      PaymentStatus `json:"paymentStatus"`
-	CreatedAt          time.Time     `json:"createdAtt"`
-	UpdatedAt          time.Time     `json:"updatedAt"`
+	Id                 int
+	Amount             int
+	UserUuid           uuid.UUID
+	InvoiceUuid        uuid.UUID
+	PaymentMethod      PaymentMethod
+	AcquiringInvoiceId string
+	PaymentStatus      PaymentStatus
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
 }
