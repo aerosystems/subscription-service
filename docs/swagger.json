@@ -249,6 +249,9 @@
                 },
                 "updatedAt": {
                     "type": "string"
+                },
+                "userUuid": {
+                    "type": "string"
                 }
             }
         }

@@ -30,6 +30,8 @@ definitions:
         $ref: '#/definitions/models.KindSubscription'
       updatedAt:
         type: string
+      userUuid:
+        type: string
     type: object
 host: gw.verifire.dev/subs
 info:

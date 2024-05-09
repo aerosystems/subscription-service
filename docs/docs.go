@@ -252,6 +252,9 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                },
+                "userUuid": {
+                    "type": "string"
                 }
             }
         }
