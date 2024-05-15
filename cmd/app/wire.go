@@ -13,17 +13,14 @@ import (
 	"github.com/aerosystems/subs-service/internal/presenters/http/handlers"
 	"github.com/aerosystems/subs-service/internal/presenters/http/middleware"
 	RpcServer "github.com/aerosystems/subs-service/internal/presenters/rpc"
-	"github.com/aerosystems/subs-service/internal/repository"
 	"github.com/aerosystems/subs-service/internal/repository/fire"
-	"github.com/aerosystems/subs-service/internal/repository/pg"
+	"github.com/aerosystems/subs-service/internal/repository/memory"
 	"github.com/aerosystems/subs-service/internal/usecases"
 	"github.com/aerosystems/subs-service/pkg/firebase"
-	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
 	"github.com/aerosystems/subs-service/pkg/monobank"
 	"github.com/google/wire"
 	"github.com/sirupsen/logrus"
-	"gorm.io/gorm"
 )
 
 //go:generate wire
@@ -33,16 +30,14 @@ func InitApp() *App {
 		wire.Bind(new(handlers.PaymentUsecase), new(*usecases.PaymentUsecase)),
 		wire.Bind(new(handlers.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
 		wire.Bind(new(usecases.SubscriptionRepository), new(*fire.SubscriptionRepo)),
-		wire.Bind(new(usecases.InvoiceRepository), new(*pg.InvoiceRepo)),
-		wire.Bind(new(usecases.PriceRepository), new(*repository.PriceRepo)),
+		wire.Bind(new(usecases.InvoiceRepository), new(*fire.InvoiceRepo)),
+		wire.Bind(new(usecases.PriceRepository), new(*memory.PriceRepo)),
 		ProvideApp,
 		ProvideLogger,
 		ProvideConfig,
 		ProvideHttpServer,
 		ProvideRpcServer,
 		ProvideLogrusLogger,
-		ProvideLogrusEntry,
-		ProvideGormPostgres,
 		ProvideBaseHandler,
 		ProvidePaymentHandler,
 		ProvideSubscriptionHandler,
@@ -51,13 +46,12 @@ func InitApp() *App {
 		ProvideMonobankStrategy,
 		ProvideMonobankAcquiring,
 		ProvideSubscriptionUsecase,
-		//ProvideSubscriptionRepo,
-		ProvideInvoiceRepo,
 		ProvidePriceRepo,
 		ProvideFirestoreClient,
-		ProvideFireSubscriptionRepo,
+		ProvideSubscriptionRepo,
 		ProvideFirebaseAuthMiddleware,
 		ProvideFirebaseAuthClient,
+		ProvideInvoiceRepo,
 	),
 	)
 }
@@ -82,20 +76,8 @@ func ProvideRpcServer(log *logrus.Logger, subscriptionUsecase RpcServer.Subscrip
 	panic(wire.Build(RpcServer.NewServer))
 }
 
-func ProvideLogrusEntry(log *logger.Logger) *logrus.Entry {
-	return logrus.NewEntry(log.Logger)
-}
-
 func ProvideLogrusLogger(log *logger.Logger) *logrus.Logger {
 	return log.Logger
-}
-
-func ProvideGormPostgres(e *logrus.Entry, cfg *config.Config) *gorm.DB {
-	db := GormPostgres.NewClient(e, cfg.PostgresDSN)
-	if err := db.AutoMigrate(pg.Subscription{}, pg.Invoice{}); err != nil { // TODO: Move to migration
-		panic(err)
-	}
-	return db
 }
 
 func ProvideBaseHandler(log *logrus.Logger, cfg *config.Config) *handlers.BaseHandler {
@@ -132,16 +114,8 @@ func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository
 	panic(wire.Build(usecases.NewSubscriptionUsecase))
 }
 
-func ProvideSubscriptionRepo(client *gorm.DB) *pg.SubscriptionRepo {
-	panic(wire.Build(pg.NewSubscriptionRepo))
-}
-
-func ProvideInvoiceRepo(client *gorm.DB) *pg.InvoiceRepo {
-	panic(wire.Build(pg.NewInvoiceRepo))
-}
-
-func ProvidePriceRepo() *repository.PriceRepo {
-	panic(wire.Build(repository.NewPriceRepo))
+func ProvidePriceRepo() *memory.PriceRepo {
+	panic(wire.Build(memory.NewPriceRepo))
 }
 
 func ProvideFirestoreClient(cfg *config.Config) *firestore.Client {
@@ -153,8 +127,12 @@ func ProvideFirestoreClient(cfg *config.Config) *firestore.Client {
 	return client
 }
 
-func ProvideFireSubscriptionRepo(client *firestore.Client) *fire.SubscriptionRepo {
+func ProvideSubscriptionRepo(client *firestore.Client) *fire.SubscriptionRepo {
 	panic(wire.Build(fire.NewSubscriptionRepo))
+}
+
+func ProvideInvoiceRepo(client *firestore.Client) *fire.InvoiceRepo {
+	panic(wire.Build(fire.NewInvoiceRepo))
 }
 
 func ProvideFirebaseAuthMiddleware(client *auth.Client) *middleware.FirebaseAuth {
@@ -162,7 +140,7 @@ func ProvideFirebaseAuthMiddleware(client *auth.Client) *middleware.FirebaseAuth
 }
 
 func ProvideFirebaseAuthClient(cfg *config.Config) *auth.Client {
-	app, err := firebaseApp.NewApp(cfg.GcpProjectId, cfg.GcpServiceAccountFilePath)
+	app, err := firebaseApp.NewApp(cfg.GcpProjectId, cfg.GoogleApplicationCredentials)
 	if err != nil {
 		panic(err)
 	}

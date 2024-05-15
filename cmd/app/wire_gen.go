@@ -16,16 +16,13 @@ import (
 	"github.com/aerosystems/subs-service/internal/presenters/http/handlers"
 	"github.com/aerosystems/subs-service/internal/presenters/http/middleware"
 	"github.com/aerosystems/subs-service/internal/presenters/rpc"
-	"github.com/aerosystems/subs-service/internal/repository"
 	"github.com/aerosystems/subs-service/internal/repository/fire"
-	"github.com/aerosystems/subs-service/internal/repository/pg"
+	"github.com/aerosystems/subs-service/internal/repository/memory"
 	"github.com/aerosystems/subs-service/internal/usecases"
 	"github.com/aerosystems/subs-service/pkg/firebase"
-	"github.com/aerosystems/subs-service/pkg/gorm_postgres"
 	"github.com/aerosystems/subs-service/pkg/logger"
 	"github.com/aerosystems/subs-service/pkg/monobank"
 	"github.com/sirupsen/logrus"
-	"gorm.io/gorm"
 )
 
 // Injectors from wire.go:
@@ -39,13 +36,11 @@ func InitApp() *App {
 	firebaseAuth := ProvideFirebaseAuthMiddleware(client)
 	baseHandler := ProvideBaseHandler(logrusLogger, config)
 	firestoreClient := ProvideFirestoreClient(config)
-	subscriptionRepo := ProvideFireSubscriptionRepo(firestoreClient)
+	subscriptionRepo := ProvideSubscriptionRepo(firestoreClient)
 	priceRepo := ProvidePriceRepo()
 	subscriptionUsecase := ProvideSubscriptionUsecase(subscriptionRepo, priceRepo)
 	subscriptionHandler := ProvideSubscriptionHandler(baseHandler, subscriptionUsecase)
-	entry := ProvideLogrusEntry(logger)
-	db := ProvideGormPostgres(entry, config)
-	invoiceRepo := ProvideInvoiceRepo(db)
+	invoiceRepo := ProvideInvoiceRepo(firestoreClient)
 	acquiring := ProvideMonobankAcquiring(config)
 	monobankStrategy := ProvideMonobankStrategy(acquiring, config)
 	v := ProvidePaymentMap(monobankStrategy)
@@ -97,24 +92,19 @@ func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository
 	return subscriptionUsecase
 }
 
-func ProvideSubscriptionRepo(client *gorm.DB) *pg.SubscriptionRepo {
-	subscriptionRepo := pg.NewSubscriptionRepo(client)
-	return subscriptionRepo
-}
-
-func ProvideInvoiceRepo(client *gorm.DB) *pg.InvoiceRepo {
-	invoiceRepo := pg.NewInvoiceRepo(client)
-	return invoiceRepo
-}
-
-func ProvidePriceRepo() *repository.PriceRepo {
-	priceRepo := repository.NewPriceRepo()
+func ProvidePriceRepo() *memory.PriceRepo {
+	priceRepo := memory.NewPriceRepo()
 	return priceRepo
 }
 
-func ProvideFireSubscriptionRepo(client *firestore.Client) *fire.SubscriptionRepo {
+func ProvideSubscriptionRepo(client *firestore.Client) *fire.SubscriptionRepo {
 	subscriptionRepo := fire.NewSubscriptionRepo(client)
 	return subscriptionRepo
+}
+
+func ProvideInvoiceRepo(client *firestore.Client) *fire.InvoiceRepo {
+	invoiceRepo := fire.NewInvoiceRepo(client)
+	return invoiceRepo
 }
 
 // wire.go:
@@ -123,20 +113,8 @@ func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.Fi
 	return HttpServer.NewServer(log, firebaseAuthMiddleware, subscriptionHandler, paymentHandler)
 }
 
-func ProvideLogrusEntry(log *logger.Logger) *logrus.Entry {
-	return logrus.NewEntry(log.Logger)
-}
-
 func ProvideLogrusLogger(log *logger.Logger) *logrus.Logger {
 	return log.Logger
-}
-
-func ProvideGormPostgres(e *logrus.Entry, cfg *config.Config) *gorm.DB {
-	db := GormPostgres.NewClient(e, cfg.PostgresDSN)
-	if err := db.AutoMigrate(pg.Subscription{}, pg.Invoice{}); err != nil {
-		panic(err)
-	}
-	return db
 }
 
 func ProvideBaseHandler(log *logrus.Logger, cfg *config.Config) *handlers.BaseHandler {
@@ -169,7 +147,7 @@ func ProvideFirebaseAuthMiddleware(client *auth.Client) *middleware.FirebaseAuth
 }
 
 func ProvideFirebaseAuthClient(cfg *config.Config) *auth.Client {
-	app, err := firebaseApp.NewApp(cfg.GcpProjectId, cfg.GcpServiceAccountFilePath)
+	app, err := firebaseApp.NewApp(cfg.GcpProjectId, cfg.GoogleApplicationCredentials)
 	if err != nil {
 		panic(err)
 	}

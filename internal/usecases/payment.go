@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"context"
 	"fmt"
 	"github.com/aerosystems/subs-service/internal/models"
 	"github.com/google/uuid"
@@ -62,7 +63,7 @@ func (ps PaymentUsecase) GetPaymentUrl(userUuid uuid.UUID, subscription models.K
 	if err != nil {
 		return "", err
 	}
-	if err := ps.invoiceRepo.Create(&models.Invoice{
+	if err := ps.invoiceRepo.Create(context.Background(), &models.Invoice{
 		UserUuid:           userUuid,
 		Amount:             amount,
 		InvoiceUuid:        invoiceUuid,
@@ -80,7 +81,7 @@ func (ps PaymentUsecase) ProcessingWebhookPayment(bodyBytes []byte, headers map[
 	if err != nil {
 		return err
 	}
-	invoice, err := ps.invoiceRepo.GetByAcquiringInvoiceId(webhook.AcquiringInvoiceId)
+	invoice, err := ps.invoiceRepo.GetByAcquiringInvoiceId(context.Background(), webhook.AcquiringInvoiceId)
 	if err != nil {
 		return err
 	}
@@ -89,7 +90,7 @@ func (ps PaymentUsecase) ProcessingWebhookPayment(bodyBytes []byte, headers map[
 	}
 	invoice.PaymentStatus = models.NewPaymentStatus(webhook.Status)
 	invoice.UpdatedAt = webhook.ModifiedDate
-	if err := ps.invoiceRepo.Update(invoice); err != nil {
+	if err := ps.invoiceRepo.Update(context.Background(), invoice); err != nil {
 		return err
 	}
 	return nil

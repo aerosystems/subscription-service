@@ -3,6 +3,11 @@ package fire
 import (
 	"cloud.google.com/go/firestore"
 	"context"
+	"errors"
+	"github.com/aerosystems/subs-service/internal/models"
+	"github.com/google/uuid"
+	"google.golang.org/api/iterator"
+	"time"
 )
 
 type InvoiceRepo struct {
@@ -15,52 +20,75 @@ func NewInvoiceRepo(client *firestore.Client) *InvoiceRepo {
 	}
 }
 
-func (r *InvoiceRepo) GetByUserUuid(ctx context.Context, userUuid string) ([]map[string]interface{}, error) {
-	var invoices []map[string]interface{}
-
-	iter := r.client.Collection("invoices").Where("user_uuid", "==", userUuid).Documents(ctx)
-	defer iter.Stop()
-
-	for {
-		doc, err := iter.Next()
-		if err != nil {
-			break
-		}
-
-		invoices = append(invoices, doc.Data())
-	}
-
-	return invoices, nil
+type InvoiceFire struct {
+	Amount             int       `firestore:"amount"`
+	UserUuid           string    `firestore:"user_uuid"`
+	InvoiceUuid        string    `firestore:"invoice_uuid"`
+	PaymentMethod      string    `firestore:"payment_method"`
+	AcquiringInvoiceId string    `firestore:"acquiring_invoice_id"`
+	PaymentStatus      string    `firestore:"payment_status"`
+	CreatedAt          time.Time `firestore:"created_at"`
+	UpdatedAt          time.Time `firestore:"updated_at"`
 }
 
-func (r *InvoiceRepo) GetByUuid(ctx context.Context, uuid string) (map[string]interface{}, error) {
-	docRef := r.client.Collection("invoices").Doc(uuid)
-	doc, err := docRef.Get(ctx)
+func (i *InvoiceFire) ToModel() (models.Invoice, error) {
+	userId, err := uuid.Parse(i.UserUuid)
+	if err != nil {
+		return models.Invoice{}, err
+	}
+	invoiceUuid, err := uuid.Parse(i.InvoiceUuid)
+	if err != nil {
+		return models.Invoice{}, err
+	}
+
+	return models.Invoice{
+		Amount:             i.Amount,
+		UserUuid:           userId,
+		InvoiceUuid:        invoiceUuid,
+		PaymentMethod:      models.NewPaymentMethod(i.PaymentMethod),
+		AcquiringInvoiceId: i.AcquiringInvoiceId,
+		PaymentStatus:      models.NewPaymentStatus(i.PaymentStatus),
+		CreatedAt:          i.CreatedAt,
+		UpdatedAt:          i.UpdatedAt,
+	}, nil
+}
+
+func (r *InvoiceRepo) Create(ctx context.Context, invoice *models.Invoice) error {
+	_, _, err := r.client.Collection("invoices").Add(ctx, invoice)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *InvoiceRepo) GetByAcquiringInvoiceId(ctx context.Context, acquiringInvoiceId string) (*models.Invoice, error) {
+	c, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	var invoiceFire InvoiceFire
+	iter := r.client.Collection("invoices").Where("acquiring_invoice_id", "==", acquiringInvoiceId).Documents(c)
+	for {
+		doc, err := iter.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		doc.DataTo(&invoiceFire)
+	}
+	invoice, err := invoiceFire.ToModel()
 	if err != nil {
 		return nil, err
 	}
-
-	return doc.Data(), nil
+	return &invoice, nil
 }
 
-func (r *InvoiceRepo) Create(ctx context.Context, invoice map[string]interface{}) error {
-	_, err := r.client.Collection("invoices").Doc(invoice["uuid"].(string)).Set(ctx, invoice)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+func (r *InvoiceRepo) Update(ctx context.Context, invoice *models.Invoice) error {
+	c, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
 
-func (r *InvoiceRepo) Update(ctx context.Context, invoice map[string]interface{}) error {
-	_, err := r.client.Collection("invoices").Doc(invoice["uuid"].(string)).Set(ctx, invoice)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *InvoiceRepo) Delete(ctx context.Context, invoice map[string]interface{}) error {
-	_, err := r.client.Collection("invoices").Doc(invoice["uuid"].(string)).Delete(ctx)
+	_, err := r.client.Collection("invoices").Doc(invoice.InvoiceUuid.String()).Set(c, invoice)
 	if err != nil {
 		return err
 	}

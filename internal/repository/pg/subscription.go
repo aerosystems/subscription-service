@@ -17,7 +17,7 @@ func NewSubscriptionRepo(db *gorm.DB) *SubscriptionRepo {
 	return &SubscriptionRepo{db: db}
 }
 
-type Subscription struct {
+type SubscriptionPg struct {
 	Id         int       `gorm:"primaryKey;autoIncrement"`
 	UserUuid   uuid.UUID `gorm:"unique"`
 	Kind       string    `gorm:"<-"`
@@ -27,7 +27,7 @@ type Subscription struct {
 	UpdatedAt  time.Time `gorm:"autoUpdateTime"`
 }
 
-func (r *Subscription) ToModel() *models.Subscription {
+func (r *SubscriptionPg) ToModel() *models.Subscription {
 	return &models.Subscription{
 		UserUuid:   r.UserUuid,
 		Kind:       models.NewKindSubscription(r.Kind),
@@ -38,8 +38,8 @@ func (r *Subscription) ToModel() *models.Subscription {
 	}
 }
 
-func ModelToPg(subscription *models.Subscription) *Subscription {
-	return &Subscription{
+func ModelToPg(subscription *models.Subscription) *SubscriptionPg {
+	return &SubscriptionPg{
 		UserUuid:   subscription.UserUuid,
 		Kind:       subscription.Kind.String(),
 		Duration:   subscription.Duration.String(),
@@ -58,7 +58,7 @@ func (r *SubscriptionRepo) Create(ctx context.Context, subscription *models.Subs
 }
 
 func (r *SubscriptionRepo) GetByUserUuid(ctx context.Context, userUuid uuid.UUID) (*models.Subscription, error) {
-	var subscription Subscription
+	var subscription SubscriptionPg
 	result := r.db.Where("user_uuid = ?", userUuid.String()).First(&subscription)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
