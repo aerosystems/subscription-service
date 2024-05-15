@@ -9,6 +9,7 @@ import (
 
 func (s *Server) setupMiddleware() {
 	s.addLog(s.log)
+	s.addCORS()
 }
 
 func (s *Server) addLog(log *logrus.Logger) {

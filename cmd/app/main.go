@@ -5,13 +5,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-const (
-	webPort = 80
-	rpcPort = 5001
-)
-
 // @title Subscription Service
-// @version 1.0.0
+// @version 2.0.0
 // @description A part of microservice infrastructure, who responsible for user subscriptions
 
 // @contact.name Artem Kostenko
