@@ -14,7 +14,7 @@ type SubsRPCPayload struct {
 
 func (s Server) CreateFreeTrial(payload SubsRPCPayload, resp *string) error {
 	*resp = "ok"
-	return s.subscriptionUsecase.CreateFreeTrial(payload.UserUuid, models.NewKindSubscription(payload.Kind))
+	return s.subscriptionUsecase.CreateFreeTrial(payload.UserUuid, models.NewSubscriptionType(payload.Kind))
 }
 
 func (s Server) GetSubscription(userUuid uuid.UUID, resp *SubsRPCPayload) error {
@@ -22,7 +22,7 @@ func (s Server) GetSubscription(userUuid uuid.UUID, resp *SubsRPCPayload) error 
 	if err != nil {
 		return err
 	}
-	resp.Kind = sub.Kind.String()
+	resp.Kind = sub.Type.String()
 	resp.AccessTime = sub.AccessTime
 	return nil
 }

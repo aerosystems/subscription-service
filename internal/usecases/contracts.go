@@ -20,6 +20,6 @@ type SubscriptionRepository interface {
 }
 
 type PriceRepository interface {
-	GetPrice(kindSubscription models.KindSubscription, durationSubscription models.DurationSubscription) (int, error)
-	GetAll() map[models.KindSubscription]map[models.DurationSubscription]int
+	GetPrice(kindSubscription models.SubscriptionType, durationSubscription models.SubscriptionDuration) (int, error)
+	GetAll() map[models.SubscriptionType]map[models.SubscriptionDuration]int
 }

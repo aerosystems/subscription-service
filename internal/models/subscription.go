@@ -7,29 +7,29 @@ import (
 
 type Subscription struct {
 	UserUuid   uuid.UUID
-	Kind       KindSubscription
-	Duration   DurationSubscription
+	Type       SubscriptionType
+	Duration   SubscriptionDuration
 	AccessTime time.Time
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 }
 
-type KindSubscription struct {
+type SubscriptionType struct {
 	slug string
 }
 
 var (
-	UnknownSubscription  = KindSubscription{"unknown"}
-	TrialSubscription    = KindSubscription{"trial"}
-	StartupSubscription  = KindSubscription{"startup"}
-	BusinessSubscription = KindSubscription{"business"}
+	UnknownSubscription  = SubscriptionType{"unknown"}
+	TrialSubscription    = SubscriptionType{"trial"}
+	StartupSubscription  = SubscriptionType{"startup"}
+	BusinessSubscription = SubscriptionType{"business"}
 )
 
-func (k KindSubscription) String() string {
+func (k SubscriptionType) String() string {
 	return k.slug
 }
 
-func NewKindSubscription(kind string) KindSubscription {
+func NewSubscriptionType(kind string) SubscriptionType {
 	switch kind {
 	case TrialSubscription.String():
 		return TrialSubscription
@@ -42,27 +42,28 @@ func NewKindSubscription(kind string) KindSubscription {
 	}
 }
 
-type DurationSubscription struct {
+type SubscriptionDuration struct {
 	slug string
 }
 
 var (
-	UnknownDurationSubscription     = DurationSubscription{"unknown"}
-	OneMonthDurationSubscription    = DurationSubscription{"1m"}
-	TwelveMonthDurationSubscription = DurationSubscription{"12m"}
+	UnknownSubscriptionDuration     = SubscriptionDuration{"unknown"}
+	OneWeekSubscriptionDuration     = SubscriptionDuration{"1w"}
+	OneMonthSubscriptionDuration    = SubscriptionDuration{"1m"}
+	TwelveMonthSubscriptionDuration = SubscriptionDuration{"12m"}
 )
 
-func (d DurationSubscription) String() string {
+func (d SubscriptionDuration) String() string {
 	return d.slug
 }
 
-func NewDurationSubscription(duration string) DurationSubscription {
+func NewSubscriptionDuration(duration string) SubscriptionDuration {
 	switch duration {
-	case OneMonthDurationSubscription.String():
-		return OneMonthDurationSubscription
-	case TwelveMonthDurationSubscription.String():
-		return TwelveMonthDurationSubscription
+	case OneMonthSubscriptionDuration.String():
+		return OneMonthSubscriptionDuration
+	case TwelveMonthSubscriptionDuration.String():
+		return TwelveMonthSubscriptionDuration
 	default:
-		return UnknownDurationSubscription
+		return UnknownSubscriptionDuration
 	}
 }

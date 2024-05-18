@@ -25,7 +25,7 @@ type SubscriptionResponse struct {
 
 func ModelToSubscriptionResponse(subscription *models.Subscription) *SubscriptionResponse {
 	return &SubscriptionResponse{
-		Name:       subscription.Kind.String(),
+		Name:       subscription.Type.String(),
 		Duration:   subscription.Duration.String(),
 		AccessTime: subscription.AccessTime.String(),
 	}
@@ -67,7 +67,7 @@ type PriceResponse struct {
 	Prices map[string]map[string]int `json:"prices" example:"{\"trial\":{\"1m\":0,\"12m\":0},\"startup\":{\"1m\":1000,\"12m\":10000},\"business\":{\"1m\":10000,\"12m\":100000}}"`
 }
 
-func ModelToPriceResponse(prices map[models.KindSubscription]map[models.DurationSubscription]int) *PriceResponse {
+func ModelToPriceResponse(prices map[models.SubscriptionType]map[models.SubscriptionDuration]int) *PriceResponse {
 	priceResponse := make(map[string]map[string]int)
 	for kind, durations := range prices {
 		priceResponse[kind.String()] = make(map[string]int)

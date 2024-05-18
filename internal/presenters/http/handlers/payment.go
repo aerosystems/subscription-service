@@ -40,8 +40,8 @@ func (ph PaymentHandler) WebhookPayment(c echo.Context) error {
 }
 
 type InvoiceRequest struct {
-	KindSubscription     models.KindSubscription     `json:"kindSubscription" validate:"required" example:"business"`
-	DurationSubscription models.DurationSubscription `json:"durationSubscription" validate:"required" example:"12m"`
+	SubscriptionType     models.SubscriptionType     `json:"kindSubscription" validate:"required" example:"business"`
+	SubscriptionDuration models.SubscriptionDuration `json:"durationSubscription" validate:"required" example:"12m"`
 }
 
 type InvoiceResponse struct {
@@ -73,7 +73,7 @@ func (ph PaymentHandler) CreateInvoice(c echo.Context) error {
 	if err := c.Bind(&requestBody); err != nil {
 		return ph.ErrorResponse(c, http.StatusUnprocessableEntity, "invalid request body", err)
 	}
-	paymentUrl, err := ph.paymentUsecase.GetPaymentUrl(uuid.MustParse(accessTokenClaims.UserUuid), requestBody.KindSubscription, requestBody.DurationSubscription)
+	paymentUrl, err := ph.paymentUsecase.GetPaymentUrl(uuid.MustParse(accessTokenClaims.UserUuid), requestBody.SubscriptionType, requestBody.SubscriptionDuration)
 	if err != nil {
 		return ph.ErrorResponse(c, http.StatusInternalServerError, "could not create invoice", err)
 	}

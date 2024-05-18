@@ -52,7 +52,7 @@ func (ps PaymentUsecase) SetPaymentMethod(paymentMethod models.PaymentMethod) er
 	return nil
 }
 
-func (ps PaymentUsecase) GetPaymentUrl(userUuid uuid.UUID, subscription models.KindSubscription, duration models.DurationSubscription) (string, error) {
+func (ps PaymentUsecase) GetPaymentUrl(userUuid uuid.UUID, subscription models.SubscriptionType, duration models.SubscriptionDuration) (string, error) {
 	amount, err := ps.priceRepo.GetPrice(subscription, duration)
 	if err != nil {
 		return "", err

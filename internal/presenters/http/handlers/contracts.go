@@ -6,14 +6,14 @@ import (
 )
 
 type SubscriptionUsecase interface {
-	GetPrices() map[models.KindSubscription]map[models.DurationSubscription]int
-	CreateFreeTrial(userUuid uuid.UUID, kind models.KindSubscription) error
+	GetPrices() map[models.SubscriptionType]map[models.SubscriptionDuration]int
+	CreateFreeTrial(userUuid uuid.UUID, kind models.SubscriptionType) error
 	GetSubscription(userUuid uuid.UUID) (*models.Subscription, error)
 	DeleteSubscription(userUuid uuid.UUID) error
 }
 
 type PaymentUsecase interface {
 	SetPaymentMethod(paymentMethod models.PaymentMethod) error
-	GetPaymentUrl(userUuid uuid.UUID, subscription models.KindSubscription, duration models.DurationSubscription) (string, error)
+	GetPaymentUrl(userUuid uuid.UUID, subscription models.SubscriptionType, duration models.SubscriptionDuration) (string, error)
 	ProcessingWebhookPayment(bodyBytes []byte, headers map[string][]string) error
 }

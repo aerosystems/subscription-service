@@ -30,8 +30,8 @@ type SubscriptionPg struct {
 func (r *SubscriptionPg) ToModel() *models.Subscription {
 	return &models.Subscription{
 		UserUuid:   r.UserUuid,
-		Kind:       models.NewKindSubscription(r.Kind),
-		Duration:   models.NewDurationSubscription(r.Duration),
+		Type:       models.NewSubscriptionType(r.Kind),
+		Duration:   models.NewSubscriptionDuration(r.Duration),
 		AccessTime: r.AccessTime,
 		CreatedAt:  r.CreatedAt,
 		UpdatedAt:  r.UpdatedAt,
@@ -41,7 +41,7 @@ func (r *SubscriptionPg) ToModel() *models.Subscription {
 func ModelToPg(subscription *models.Subscription) *SubscriptionPg {
 	return &SubscriptionPg{
 		UserUuid:   subscription.UserUuid,
-		Kind:       subscription.Kind.String(),
+		Kind:       subscription.Type.String(),
 		Duration:   subscription.Duration.String(),
 		AccessTime: subscription.AccessTime,
 		CreatedAt:  subscription.CreatedAt,

@@ -6,25 +6,25 @@ import (
 )
 
 type PriceRepo struct {
-	priceMap map[models.KindSubscription]map[models.DurationSubscription]int
+	priceMap map[models.SubscriptionType]map[models.SubscriptionDuration]int
 }
 
 func NewPriceRepo() *PriceRepo {
 	return &PriceRepo{
-		priceMap: map[models.KindSubscription]map[models.DurationSubscription]int{
+		priceMap: map[models.SubscriptionType]map[models.SubscriptionDuration]int{
 			models.StartupSubscription: {
-				models.OneMonthDurationSubscription:    500,  // 5$ per month in cents
-				models.TwelveMonthDurationSubscription: 5000, // 50$ per year in cents
+				models.OneMonthSubscriptionDuration:    500,  // 5$ per month in cents
+				models.TwelveMonthSubscriptionDuration: 5000, // 50$ per year in cents
 			},
 			models.BusinessSubscription: {
-				models.OneMonthDurationSubscription:    1000,  // 10$ per month in cents
-				models.TwelveMonthDurationSubscription: 10000, // 100$ per year in cents
+				models.OneMonthSubscriptionDuration:    1000,  // 10$ per month in cents
+				models.TwelveMonthSubscriptionDuration: 10000, // 100$ per year in cents
 			},
 		},
 	}
 }
 
-func (pr *PriceRepo) GetPrice(kindSubscription models.KindSubscription, durationSubscription models.DurationSubscription) (int, error) {
+func (pr *PriceRepo) GetPrice(kindSubscription models.SubscriptionType, durationSubscription models.SubscriptionDuration) (int, error) {
 	price, ok := pr.priceMap[kindSubscription][durationSubscription]
 	if !ok {
 		return 0, errors.New("price not found")
@@ -32,6 +32,6 @@ func (pr *PriceRepo) GetPrice(kindSubscription models.KindSubscription, duration
 	return price, nil
 }
 
-func (pr *PriceRepo) GetAll() map[models.KindSubscription]map[models.DurationSubscription]int {
+func (pr *PriceRepo) GetAll() map[models.SubscriptionType]map[models.SubscriptionDuration]int {
 	return pr.priceMap
 }

@@ -229,10 +229,10 @@ const docTemplate = `{
                 }
             }
         },
-        "models.DurationSubscription": {
+        "models.SubscriptionDuration": {
             "type": "object"
         },
-        "models.KindSubscription": {
+        "models.SubscriptionType": {
             "type": "object"
         },
         "models.Subscription": {
@@ -245,10 +245,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "duration": {
-                    "$ref": "#/definitions/models.DurationSubscription"
+                    "$ref": "#/definitions/models.SubscriptionDuration"
                 },
                 "kind": {
-                    "$ref": "#/definitions/models.KindSubscription"
+                    "$ref": "#/definitions/models.SubscriptionType"
                 },
                 "updatedAt": {
                     "type": "string"

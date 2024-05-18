@@ -6,7 +6,7 @@ import (
 )
 
 type SubscriptionUsecase interface {
-	CreateFreeTrial(userUuid uuid.UUID, kind models.KindSubscription) error
+	CreateFreeTrial(userUuid uuid.UUID, kind models.SubscriptionType) error
 	GetSubscription(userUuid uuid.UUID) (*models.Subscription, error)
 	DeleteSubscription(userUuid uuid.UUID) error
 }

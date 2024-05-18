@@ -21,19 +21,19 @@ func NewSubscriptionUsecase(subsRepo SubscriptionRepository, priceRepo PriceRepo
 	}
 }
 
-func NewSubscription(userUuid uuid.UUID, kind models.KindSubscription, accessTime time.Time) *models.Subscription {
+func NewSubscription(userUuid uuid.UUID, kind models.SubscriptionType, accessTime time.Time) *models.Subscription {
 	return &models.Subscription{
 		UserUuid:   userUuid,
-		Kind:       kind,
+		Type:       kind,
 		AccessTime: accessTime,
 	}
 }
 
-func (ss SubscriptionUsecase) GetPrices() map[models.KindSubscription]map[models.DurationSubscription]int {
+func (ss SubscriptionUsecase) GetPrices() map[models.SubscriptionType]map[models.SubscriptionDuration]int {
 	return ss.priceRepo.GetAll()
 }
 
-func (ss SubscriptionUsecase) CreateFreeTrial(userUuid uuid.UUID, kind models.KindSubscription) error {
+func (ss SubscriptionUsecase) CreateFreeTrial(userUuid uuid.UUID, kind models.SubscriptionType) error {
 	sub := NewSubscription(userUuid, kind, time.Now().Add(time.Second*defaultTimeDuration))
 	ctx := context.Background()
 	return ss.subsRepo.Create(ctx, sub)

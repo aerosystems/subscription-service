@@ -14,9 +14,9 @@ definitions:
       message:
         type: string
     type: object
-  models.DurationSubscription:
+  models.SubscriptionDuration:
     type: object
-  models.KindSubscription:
+  models.SubscriptionType:
     type: object
   models.Subscription:
     properties:
@@ -25,9 +25,9 @@ definitions:
       createdAt:
         type: string
       duration:
-        $ref: '#/definitions/models.DurationSubscription'
+        $ref: '#/definitions/models.SubscriptionDuration'
       kind:
-        $ref: '#/definitions/models.KindSubscription'
+        $ref: '#/definitions/models.SubscriptionType'
       updatedAt:
         type: string
       userUuid:
