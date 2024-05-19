@@ -2,8 +2,8 @@ package HttpServer
 
 import (
 	"fmt"
-	"github.com/aerosystems/subs-service/internal/presenters/http/handlers"
-	"github.com/aerosystems/subs-service/internal/presenters/http/middleware"
+	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers"
+	"github.com/aerosystems/subscription-service/internal/presenters/http/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )

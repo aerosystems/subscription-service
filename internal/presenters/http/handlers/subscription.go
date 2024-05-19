@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"github.com/aerosystems/subs-service/internal/models"
-	"github.com/aerosystems/subs-service/internal/presenters/http/middleware"
+	"github.com/aerosystems/subscription-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/presenters/http/middleware"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"net/http"

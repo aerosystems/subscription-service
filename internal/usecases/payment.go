@@ -3,7 +3,7 @@ package usecases
 import (
 	"context"
 	"fmt"
-	"github.com/aerosystems/subs-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/models"
 	"github.com/google/uuid"
 	"time"
 )

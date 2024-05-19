@@ -1,7 +1,7 @@
 package HttpServer
 
 import (
-	"github.com/aerosystems/subs-service/internal/validators"
+	"github.com/aerosystems/subscription-service/internal/validators"
 	"github.com/go-playground/validator/v10"
 )
 

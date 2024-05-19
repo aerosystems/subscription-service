@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/aerosystems/subs-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/models"
 	"github.com/golang-jwt/jwt"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"

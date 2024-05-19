@@ -2,8 +2,8 @@ package usecases
 
 import (
 	"encoding/json"
-	"github.com/aerosystems/subs-service/internal/models"
-	"github.com/aerosystems/subs-service/pkg/monobank"
+	"github.com/aerosystems/subscription-service/internal/models"
+	"github.com/aerosystems/subscription-service/pkg/monobank"
 )
 
 type MonobankStrategy struct {

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/aerosystems/subs-service/internal/config"
-	HttpServer "github.com/aerosystems/subs-service/internal/presenters/http"
-	RpcServer "github.com/aerosystems/subs-service/internal/presenters/rpc"
+	"github.com/aerosystems/subscription-service/internal/config"
+	HttpServer "github.com/aerosystems/subscription-service/internal/presenters/http"
+	RpcServer "github.com/aerosystems/subscription-service/internal/presenters/rpc"
 	"github.com/sirupsen/logrus"
 )
 

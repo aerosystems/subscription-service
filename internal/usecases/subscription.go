@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"context"
-	"github.com/aerosystems/subs-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/models"
 	"github.com/google/uuid"
 	"time"
 )
@@ -33,8 +33,8 @@ func (ss SubscriptionUsecase) GetPrices() map[models.SubscriptionType]map[models
 	return ss.priceRepo.GetAll()
 }
 
-func (ss SubscriptionUsecase) CreateFreeTrial(userUuid uuid.UUID, kind models.SubscriptionType) error {
-	sub := NewSubscription(userUuid, kind, time.Now().Add(time.Second*defaultTimeDuration))
+func (ss SubscriptionUsecase) CreateFreeTrial(userUuid uuid.UUID, subscriptionType models.SubscriptionType) error {
+	sub := NewSubscription(userUuid, subscriptionType, time.Now().Add(time.Second*defaultTimeDuration))
 	ctx := context.Background()
 	return ss.subsRepo.Create(ctx, sub)
 }

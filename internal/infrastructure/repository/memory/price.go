@@ -2,7 +2,7 @@ package memory
 
 import (
 	"errors"
-	"github.com/aerosystems/subs-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/models"
 )
 
 type PriceRepo struct {

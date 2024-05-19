@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 	"firebase.google.com/go/auth"
-	"github.com/aerosystems/subs-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/models"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"net/http"

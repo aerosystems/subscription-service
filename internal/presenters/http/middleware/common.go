@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
-	"github.com/aerosystems/subs-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/models"
 	"net/http"
 	"strings"
 )
