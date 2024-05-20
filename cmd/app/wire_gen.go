@@ -16,6 +16,8 @@ import (
 	"github.com/aerosystems/subscription-service/internal/models"
 	"github.com/aerosystems/subscription-service/internal/presenters/http"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers"
+	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers/payment"
+	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers/subscription"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/middleware"
 	"github.com/aerosystems/subscription-service/internal/presenters/rpc"
 	"github.com/aerosystems/subscription-service/internal/usecases"
@@ -37,16 +39,16 @@ func InitApp() *App {
 	baseHandler := ProvideBaseHandler(logrusLogger, config)
 	firestoreClient := ProvideFirestoreClient(config)
 	subscriptionRepo := ProvideSubscriptionRepo(firestoreClient)
-	priceRepo := ProvidePriceRepo()
-	subscriptionUsecase := ProvideSubscriptionUsecase(subscriptionRepo, priceRepo)
-	subscriptionHandler := ProvideSubscriptionHandler(baseHandler, subscriptionUsecase)
+	subscriptionUsecase := ProvideSubscriptionUsecase(subscriptionRepo)
+	handler := ProvideSubscriptionHandler(baseHandler, subscriptionUsecase)
 	invoiceRepo := ProvideInvoiceRepo(firestoreClient)
+	priceRepo := ProvidePriceRepo()
 	acquiring := ProvideMonobankAcquiring(config)
 	monobankStrategy := ProvideMonobankStrategy(acquiring, config)
 	v := ProvidePaymentMap(monobankStrategy)
 	paymentUsecase := ProvidePaymentUsecase(invoiceRepo, priceRepo, v)
 	paymentHandler := ProvidePaymentHandler(baseHandler, paymentUsecase)
-	server := ProvideHttpServer(logrusLogger, firebaseAuth, subscriptionHandler, paymentHandler)
+	server := ProvideHttpServer(logrusLogger, firebaseAuth, handler, paymentHandler)
 	rpcServerServer := ProvideRpcServer(logrusLogger, subscriptionUsecase)
 	app := ProvideApp(logrusLogger, config, server, rpcServerServer)
 	return app
@@ -72,14 +74,14 @@ func ProvideRpcServer(log *logrus.Logger, subscriptionUsecase RpcServer.Subscrip
 	return server
 }
 
-func ProvidePaymentHandler(baseHandler *handlers.BaseHandler, paymentUsecase handlers.PaymentUsecase) *handlers.PaymentHandler {
-	paymentHandler := handlers.NewPaymentHandler(baseHandler, paymentUsecase)
-	return paymentHandler
+func ProvidePaymentHandler(baseHandler *handlers.BaseHandler, paymentUsecase handlers.PaymentUsecase) *payment.Handler {
+	handler := payment.NewPaymentHandler(baseHandler, paymentUsecase)
+	return handler
 }
 
-func ProvideSubscriptionHandler(baseHandler *handlers.BaseHandler, subscriptionUsecase handlers.SubscriptionUsecase) *handlers.SubscriptionHandler {
-	subscriptionHandler := handlers.NewSubscriptionHandler(baseHandler, subscriptionUsecase)
-	return subscriptionHandler
+func ProvideSubscriptionHandler(baseHandler *handlers.BaseHandler, subscriptionUsecase handlers.SubscriptionUsecase) *subscription.Handler {
+	handler := subscription.NewSubscriptionHandler(baseHandler, subscriptionUsecase)
+	return handler
 }
 
 func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo usecases.PriceRepository, strategies map[models.PaymentMethod]usecases.AcquiringOperations) *usecases.PaymentUsecase {
@@ -87,8 +89,8 @@ func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo use
 	return paymentUsecase
 }
 
-func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository, priceRepo usecases.PriceRepository) *usecases.SubscriptionUsecase {
-	subscriptionUsecase := usecases.NewSubscriptionUsecase(subscriptionRepo, priceRepo)
+func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository) *usecases.SubscriptionUsecase {
+	subscriptionUsecase := usecases.NewSubscriptionUsecase(subscriptionRepo)
 	return subscriptionUsecase
 }
 
@@ -109,7 +111,7 @@ func ProvideInvoiceRepo(client *firestore.Client) *fire.InvoiceRepo {
 
 // wire.go:
 
-func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.FirebaseAuth, subscriptionHandler *handlers.SubscriptionHandler, paymentHandler *handlers.PaymentHandler) *HttpServer.Server {
+func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.FirebaseAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
 	return HttpServer.NewServer(log, firebaseAuthMiddleware, subscriptionHandler, paymentHandler)
 }
 

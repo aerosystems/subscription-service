@@ -1,43 +1,12 @@
-package handlers
+package payment
 
 import (
 	"github.com/aerosystems/subscription-service/internal/models"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/middleware"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"io"
 	"net/http"
 )
-
-type PaymentHandler struct {
-	*BaseHandler
-	paymentUsecase PaymentUsecase
-}
-
-func NewPaymentHandler(
-	baseHandler *BaseHandler,
-	paymentUsecase PaymentUsecase,
-) *PaymentHandler {
-	return &PaymentHandler{
-		BaseHandler:    baseHandler,
-		paymentUsecase: paymentUsecase,
-	}
-}
-
-func (ph PaymentHandler) WebhookPayment(c echo.Context) error {
-	method := models.NewPaymentMethod(c.Param("payment_method"))
-	if err := ph.paymentUsecase.SetPaymentMethod(method); err != nil {
-		return ph.ErrorResponse(c, http.StatusBadRequest, "invalid payment method", err)
-	}
-	body, err := io.ReadAll(c.Request().Body)
-	if err != nil {
-		return ph.ErrorResponse(c, http.StatusBadRequest, "invalid request body", err)
-	}
-	if err := ph.paymentUsecase.ProcessingWebhookPayment(body, c.Request().Header); err != nil {
-		return ph.ErrorResponse(c, http.StatusInternalServerError, "could not process webhook", err)
-	}
-	return ph.SuccessResponse(c, http.StatusOK, "webhook processed successfully", nil)
-}
 
 type InvoiceRequest struct {
 	SubscriptionType     models.SubscriptionType     `json:"kindSubscription" validate:"required" example:"business"`
@@ -63,7 +32,7 @@ type InvoiceResponse struct {
 // @Failure 422 {object} Response
 // @Failure 500 {object} Response
 // @Router /v1/invoices/{payment_method} [post]
-func (ph PaymentHandler) CreateInvoice(c echo.Context) error {
+func (ph Handler) CreateInvoice(c echo.Context) error {
 	accessTokenClaims := c.Get("accessTokenClaims").(*middleware.AccessTokenClaims)
 	method := models.NewPaymentMethod(c.Param("payment_method"))
 	if err := ph.paymentUsecase.SetPaymentMethod(method); err != nil {

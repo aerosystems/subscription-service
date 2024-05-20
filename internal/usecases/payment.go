@@ -95,3 +95,7 @@ func (ps PaymentUsecase) ProcessingWebhookPayment(bodyBytes []byte, headers map[
 	}
 	return nil
 }
+
+func (ps PaymentUsecase) GetPrices() map[models.SubscriptionType]map[models.SubscriptionDuration]int {
+	return ps.priceRepo.GetAll()
+}

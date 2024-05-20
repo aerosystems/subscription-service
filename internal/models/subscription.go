@@ -43,18 +43,23 @@ func NewSubscriptionType(kind string) SubscriptionType {
 }
 
 type SubscriptionDuration struct {
-	slug string
+	slug         string
+	timeDuration time.Duration
 }
 
 var (
-	UnknownSubscriptionDuration     = SubscriptionDuration{"unknown"}
-	OneWeekSubscriptionDuration     = SubscriptionDuration{"1w"}
-	OneMonthSubscriptionDuration    = SubscriptionDuration{"1m"}
-	TwelveMonthSubscriptionDuration = SubscriptionDuration{"12m"}
+	UnknownSubscriptionDuration     = SubscriptionDuration{"unknown", 0}
+	OneWeekSubscriptionDuration     = SubscriptionDuration{"1w", time.Hour * 24 * 7}
+	OneMonthSubscriptionDuration    = SubscriptionDuration{"1m", time.Hour * 24 * 30}
+	TwelveMonthSubscriptionDuration = SubscriptionDuration{"12m", time.Hour * 24 * 365}
 )
 
 func (d SubscriptionDuration) String() string {
 	return d.slug
+}
+
+func (d SubscriptionDuration) GetTimeDuration() time.Duration {
+	return d.timeDuration
 }
 
 func NewSubscriptionDuration(duration string) SubscriptionDuration {

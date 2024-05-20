@@ -1,7 +1,7 @@
 FROM alpine:latest
 RUN mkdir /app
 
-COPY ./subs-service.bin /app
+COPY ./subscription-service.bin /app
 
 # Run the server executable
-CMD [ "/app/subs-service.bin" ]
+CMD [ "/app/subscription-service.bin" ]

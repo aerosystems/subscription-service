@@ -13,6 +13,8 @@ import (
 	"github.com/aerosystems/subscription-service/internal/models"
 	HttpServer "github.com/aerosystems/subscription-service/internal/presenters/http"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers"
+	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers/payment"
+	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers/subscription"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/middleware"
 	RpcServer "github.com/aerosystems/subscription-service/internal/presenters/rpc"
 	"github.com/aerosystems/subscription-service/internal/usecases"
@@ -68,7 +70,7 @@ func ProvideConfig() *config.Config {
 	panic(wire.Build(config.NewConfig))
 }
 
-func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.FirebaseAuth, subscriptionHandler *handlers.SubscriptionHandler, paymentHandler *handlers.PaymentHandler) *HttpServer.Server {
+func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.FirebaseAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
 	return HttpServer.NewServer(log, firebaseAuthMiddleware, subscriptionHandler, paymentHandler)
 }
 
@@ -84,12 +86,12 @@ func ProvideBaseHandler(log *logrus.Logger, cfg *config.Config) *handlers.BaseHa
 	return handlers.NewBaseHandler(log, cfg.Mode)
 }
 
-func ProvidePaymentHandler(baseHandler *handlers.BaseHandler, paymentUsecase handlers.PaymentUsecase) *handlers.PaymentHandler {
-	panic(wire.Build(handlers.NewPaymentHandler))
+func ProvidePaymentHandler(baseHandler *handlers.BaseHandler, paymentUsecase handlers.PaymentUsecase) *payment.Handler {
+	panic(wire.Build(payment.NewPaymentHandler))
 }
 
-func ProvideSubscriptionHandler(baseHandler *handlers.BaseHandler, subscriptionUsecase handlers.SubscriptionUsecase) *handlers.SubscriptionHandler {
-	panic(wire.Build(handlers.NewSubscriptionHandler))
+func ProvideSubscriptionHandler(baseHandler *handlers.BaseHandler, subscriptionUsecase handlers.SubscriptionUsecase) *subscription.Handler {
+	panic(wire.Build(subscription.NewSubscriptionHandler))
 }
 
 func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo usecases.PriceRepository, strategies map[models.PaymentMethod]usecases.AcquiringOperations) *usecases.PaymentUsecase {
@@ -110,7 +112,7 @@ func ProvideMonobankAcquiring(cfg *config.Config) *monobank.Acquiring {
 	return monobank.NewAcquiring(cfg.MonobankToken)
 }
 
-func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository, priceRepo usecases.PriceRepository) *usecases.SubscriptionUsecase {
+func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository) *usecases.SubscriptionUsecase {
 	panic(wire.Build(usecases.NewSubscriptionUsecase))
 }
 

@@ -7,34 +7,35 @@ import (
 	"time"
 )
 
-const defaultTimeDuration = 60 * 60 * 24 * 14 // 14 days in seconds
-
 type SubscriptionUsecase struct {
-	subsRepo  SubscriptionRepository
-	priceRepo PriceRepository
+	subsRepo SubscriptionRepository
 }
 
-func NewSubscriptionUsecase(subsRepo SubscriptionRepository, priceRepo PriceRepository) *SubscriptionUsecase {
+func NewSubscriptionUsecase(subsRepo SubscriptionRepository) *SubscriptionUsecase {
 	return &SubscriptionUsecase{
-		subsRepo:  subsRepo,
-		priceRepo: priceRepo,
+		subsRepo: subsRepo,
 	}
 }
 
-func NewSubscription(userUuid uuid.UUID, kind models.SubscriptionType, accessTime time.Time) *models.Subscription {
+func NewSubscription(userUuid uuid.UUID, subscriptionType models.SubscriptionType, subscriptionDuration models.SubscriptionDuration) *models.Subscription {
 	return &models.Subscription{
 		UserUuid:   userUuid,
-		Type:       kind,
-		AccessTime: accessTime,
+		Type:       subscriptionType,
+		Duration:   subscriptionDuration,
+		AccessTime: time.Now().Add(subscriptionDuration.GetTimeDuration()),
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 }
 
-func (ss SubscriptionUsecase) GetPrices() map[models.SubscriptionType]map[models.SubscriptionDuration]int {
-	return ss.priceRepo.GetAll()
+func (ss SubscriptionUsecase) CreateSubscription(userUuid uuid.UUID, subscriptionType models.SubscriptionType, subscriptionDuration models.SubscriptionDuration) error {
+	sub := NewSubscription(userUuid, subscriptionType, subscriptionDuration)
+	ctx := context.Background()
+	return ss.subsRepo.Create(ctx, sub)
 }
 
 func (ss SubscriptionUsecase) CreateFreeTrial(userUuid uuid.UUID, subscriptionType models.SubscriptionType) error {
-	sub := NewSubscription(userUuid, subscriptionType, time.Now().Add(time.Second*defaultTimeDuration))
+	sub := NewSubscription(userUuid, subscriptionType, models.OneWeekSubscriptionDuration)
 	ctx := context.Background()
 	return ss.subsRepo.Create(ctx, sub)
 }

@@ -5,7 +5,7 @@ import (
 )
 
 func (s *Server) setupRoutes() {
-	s.echo.GET("/v1/prices", s.subscriptionHandler.GetPrices)
+	s.echo.GET("/v1/prices", s.paymentHandler.GetPrices)
 
 	s.echo.GET("/v1/subscriptions", s.subscriptionHandler.GetSubscriptions, s.firebaseAuthMiddleware.RoleBased(models.CustomerRole))
 	s.echo.POST("/v1/subscriptions", s.subscriptionHandler.CreateSubscription, s.firebaseAuthMiddleware.RoleBased(models.CustomerRole))

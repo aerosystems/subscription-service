@@ -28,7 +28,7 @@ func (s Server) Run() error {
 	if err := rpc.Register(s); err != nil {
 		return err
 	}
-	s.log.Infof("starting subs-service RPC server on port %d\n", rpcPort)
+	s.log.Infof("starting subscription-service RPC server on port %d\n", rpcPort)
 	listen, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", rpcPort))
 	if err != nil {
 		return err
