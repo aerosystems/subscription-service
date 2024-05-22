@@ -12,11 +12,11 @@ type PriceRepo struct {
 func NewPriceRepo() *PriceRepo {
 	return &PriceRepo{
 		priceMap: map[models.SubscriptionType]map[models.SubscriptionDuration]int{
-			models.StartupSubscription: {
+			models.StartupSubscriptionType: {
 				models.OneMonthSubscriptionDuration:    500,  // 5$ per month in cents
 				models.TwelveMonthSubscriptionDuration: 5000, // 50$ per year in cents
 			},
-			models.BusinessSubscription: {
+			models.BusinessSubscriptionType: {
 				models.OneMonthSubscriptionDuration:    1000,  // 10$ per month in cents
 				models.TwelveMonthSubscriptionDuration: 10000, // 100$ per year in cents
 			},

@@ -2,6 +2,8 @@ package usecases
 
 import (
 	"context"
+	"fmt"
+	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
 	"github.com/aerosystems/subscription-service/internal/models"
 	"github.com/google/uuid"
 	"time"
@@ -28,10 +30,25 @@ func NewSubscription(userUuid uuid.UUID, subscriptionType models.SubscriptionTyp
 	}
 }
 
-func (ss SubscriptionUsecase) CreateSubscription(userUuid uuid.UUID, subscriptionType models.SubscriptionType, subscriptionDuration models.SubscriptionDuration) error {
+func (ss SubscriptionUsecase) CreateSubscription(userUuidStr, subscriptionTypeStr, subscriptionDurationStr string) (*models.Subscription, error) {
+	userUuid, err := uuid.Parse(userUuidStr)
+	if err != nil {
+		return nil, CustomErrors.ErrInvalidCustomerUuid
+	}
+	subscriptionType := models.SubscriptionTypeFromString(subscriptionTypeStr)
+	if subscriptionType == models.UnknownSubscriptionType {
+		return nil, CustomErrors.ErrInvalidSubscriptionType
+	}
+	subscriptionDuration := models.SubscriptionDurationFromString(subscriptionDurationStr)
+	if subscriptionDuration == models.UnknownSubscriptionDuration {
+		return nil, CustomErrors.ErrInvalidSubscriptionDuration
+	}
 	sub := NewSubscription(userUuid, subscriptionType, subscriptionDuration)
 	ctx := context.Background()
-	return ss.subsRepo.Create(ctx, sub)
+	if err := ss.subsRepo.Create(ctx, sub); err != nil {
+		return nil, fmt.Errorf("could not create subscription: %w", err)
+	}
+	return sub, nil
 }
 
 func (ss SubscriptionUsecase) CreateFreeTrial(userUuid uuid.UUID, subscriptionType models.SubscriptionType) error {

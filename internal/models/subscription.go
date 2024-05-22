@@ -19,26 +19,26 @@ type SubscriptionType struct {
 }
 
 var (
-	UnknownSubscription  = SubscriptionType{"unknown"}
-	TrialSubscription    = SubscriptionType{"trial"}
-	StartupSubscription  = SubscriptionType{"startup"}
-	BusinessSubscription = SubscriptionType{"business"}
+	UnknownSubscriptionType  = SubscriptionType{"unknown"}
+	TrialSubscriptionType    = SubscriptionType{"trial"}
+	StartupSubscriptionType  = SubscriptionType{"startup"}
+	BusinessSubscriptionType = SubscriptionType{"business"}
 )
 
 func (k SubscriptionType) String() string {
 	return k.slug
 }
 
-func NewSubscriptionType(kind string) SubscriptionType {
+func SubscriptionTypeFromString(kind string) SubscriptionType {
 	switch kind {
-	case TrialSubscription.String():
-		return TrialSubscription
-	case StartupSubscription.String():
-		return StartupSubscription
-	case BusinessSubscription.String():
-		return BusinessSubscription
+	case TrialSubscriptionType.String():
+		return TrialSubscriptionType
+	case StartupSubscriptionType.String():
+		return StartupSubscriptionType
+	case BusinessSubscriptionType.String():
+		return BusinessSubscriptionType
 	default:
-		return UnknownSubscription
+		return UnknownSubscriptionType
 	}
 }
 
@@ -62,7 +62,7 @@ func (d SubscriptionDuration) GetTimeDuration() time.Duration {
 	return d.timeDuration
 }
 
-func NewSubscriptionDuration(duration string) SubscriptionDuration {
+func SubscriptionDurationFromString(duration string) SubscriptionDuration {
 	switch duration {
 	case OneMonthSubscriptionDuration.String():
 		return OneMonthSubscriptionDuration

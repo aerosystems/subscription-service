@@ -36,8 +36,8 @@ type SubscriptionFire struct {
 func (s *SubscriptionFire) ToModel() *models.Subscription {
 	return &models.Subscription{
 		UserUuid:   uuid.MustParse(s.UserUuid),
-		Type:       models.NewSubscriptionType(s.Kind),
-		Duration:   models.NewSubscriptionDuration(s.Duration),
+		Type:       models.SubscriptionTypeFromString(s.Kind),
+		Duration:   models.SubscriptionDurationFromString(s.Duration),
 		AccessTime: s.AccessTime,
 		CreatedAt:  s.CreatedAt,
 		UpdatedAt:  s.UpdatedAt,

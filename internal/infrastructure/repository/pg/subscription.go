@@ -31,7 +31,7 @@ func (r *SubscriptionPg) ToModel() *models.Subscription {
 	return &models.Subscription{
 		UserUuid:   r.UserUuid,
 		Type:       models.NewSubscriptionType(r.Kind),
-		Duration:   models.NewSubscriptionDuration(r.Duration),
+		Duration:   models.SubscriptionDurationFromString(r.Duration),
 		AccessTime: r.AccessTime,
 		CreatedAt:  r.CreatedAt,
 		UpdatedAt:  r.UpdatedAt,
