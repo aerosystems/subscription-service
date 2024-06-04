@@ -20,7 +20,7 @@ func NewSubscriptionRepo(db *gorm.DB) *SubscriptionRepo {
 type SubscriptionPg struct {
 	Id         int       `gorm:"primaryKey;autoIncrement"`
 	UserUuid   uuid.UUID `gorm:"unique"`
-	Kind       string    `gorm:"<-"`
+	Type       string    `gorm:"<-"`
 	Duration   string    `gorm:"<-"`
 	AccessTime time.Time `gorm:"<-"`
 	CreatedAt  time.Time `gorm:"autoCreateTime"`
@@ -30,7 +30,7 @@ type SubscriptionPg struct {
 func (r *SubscriptionPg) ToModel() *models.Subscription {
 	return &models.Subscription{
 		UserUuid:   r.UserUuid,
-		Type:       models.NewSubscriptionType(r.Kind),
+		Type:       models.SubscriptionTypeFromString(r.Type),
 		Duration:   models.SubscriptionDurationFromString(r.Duration),
 		AccessTime: r.AccessTime,
 		CreatedAt:  r.CreatedAt,
@@ -41,7 +41,7 @@ func (r *SubscriptionPg) ToModel() *models.Subscription {
 func ModelToPg(subscription *models.Subscription) *SubscriptionPg {
 	return &SubscriptionPg{
 		UserUuid:   subscription.UserUuid,
-		Kind:       subscription.Type.String(),
+		Type:       subscription.Type.String(),
 		Duration:   subscription.Duration.String(),
 		AccessTime: subscription.AccessTime,
 		CreatedAt:  subscription.CreatedAt,
