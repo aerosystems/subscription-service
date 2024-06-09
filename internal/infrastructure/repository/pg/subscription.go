@@ -49,7 +49,7 @@ func ModelToPg(subscription *models.Subscription) *SubscriptionPg {
 	}
 }
 
-func (r *SubscriptionRepo) Create(ctx context.Context, subscription *models.Subscription) error {
+func (r *SubscriptionRepo) Create(_ context.Context, subscription *models.Subscription) error {
 	result := r.db.Create(ModelToPg(subscription))
 	if result.Error != nil {
 		return result.Error
@@ -57,7 +57,7 @@ func (r *SubscriptionRepo) Create(ctx context.Context, subscription *models.Subs
 	return nil
 }
 
-func (r *SubscriptionRepo) GetByUserUuid(ctx context.Context, userUuid uuid.UUID) (*models.Subscription, error) {
+func (r *SubscriptionRepo) GetByUserUuid(_ context.Context, userUuid uuid.UUID) (*models.Subscription, error) {
 	var subscription SubscriptionPg
 	result := r.db.Where("user_uuid = ?", userUuid.String()).First(&subscription)
 	if result.Error != nil {
@@ -69,7 +69,7 @@ func (r *SubscriptionRepo) GetByUserUuid(ctx context.Context, userUuid uuid.UUID
 	return subscription.ToModel(), nil
 }
 
-func (r *SubscriptionRepo) Update(ctx context.Context, subscription *models.Subscription) error {
+func (r *SubscriptionRepo) Update(_ context.Context, subscription *models.Subscription) error {
 	result := r.db.Save(ModelToPg(subscription))
 	if result.Error != nil {
 		return result.Error
@@ -77,7 +77,7 @@ func (r *SubscriptionRepo) Update(ctx context.Context, subscription *models.Subs
 	return nil
 }
 
-func (r *SubscriptionRepo) Delete(ctx context.Context, subscription *models.Subscription) error {
+func (r *SubscriptionRepo) Delete(_ context.Context, subscription *models.Subscription) error {
 	result := r.db.Delete(ModelToPg(subscription))
 	if result.Error != nil {
 		return result.Error

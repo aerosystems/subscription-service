@@ -43,7 +43,7 @@ func (i InvoicePg) ToModel() models.Invoice {
 	}
 }
 
-func (i *InvoiceRepo) Create(ctx context.Context, invoice *models.Invoice) error {
+func (i *InvoiceRepo) Create(_ context.Context, invoice *models.Invoice) error {
 	result := i.db.Create(&invoice)
 	if result.Error != nil {
 		return result.Error
@@ -51,7 +51,7 @@ func (i *InvoiceRepo) Create(ctx context.Context, invoice *models.Invoice) error
 	return nil
 }
 
-func (i *InvoiceRepo) GetByAcquiringInvoiceId(ctx context.Context, acquiringInvoiceId string) (*models.Invoice, error) {
+func (i *InvoiceRepo) GetByAcquiringInvoiceId(_ context.Context, acquiringInvoiceId string) (*models.Invoice, error) {
 	var invoice models.Invoice
 	result := i.db.Where("acquiring_invoice_id = ?", acquiringInvoiceId).First(&invoice)
 	if result.Error != nil {
@@ -63,7 +63,7 @@ func (i *InvoiceRepo) GetByAcquiringInvoiceId(ctx context.Context, acquiringInvo
 	return &invoice, nil
 }
 
-func (i *InvoiceRepo) Update(ctx context.Context, invoice *models.Invoice) error {
+func (i *InvoiceRepo) Update(_ context.Context, invoice *models.Invoice) error {
 	result := i.db.Save(&invoice)
 	if result.Error != nil {
 		return result.Error
