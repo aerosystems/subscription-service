@@ -51,10 +51,17 @@ func (ss SubscriptionUsecase) CreateSubscription(userUuidStr, subscriptionTypeSt
 	return sub, nil
 }
 
-func (ss SubscriptionUsecase) CreateFreeTrial(userUuid uuid.UUID, subscriptionType models.SubscriptionType) error {
-	sub := NewSubscription(userUuid, subscriptionType, models.OneWeekSubscriptionDuration)
+func (ss SubscriptionUsecase) CreateFreeTrial(userUuidStr string) (*models.Subscription, error) {
+	userUuid, err := uuid.Parse(userUuidStr)
+	if err != nil {
+		return nil, CustomErrors.ErrInvalidCustomerUuid
+	}
+	sub := NewSubscription(userUuid, models.TrialSubscriptionType, models.OneWeekSubscriptionDuration)
 	ctx := context.Background()
-	return ss.subsRepo.Create(ctx, sub)
+	if err := ss.subsRepo.Create(ctx, sub); err != nil {
+		return nil, fmt.Errorf("could not create subscription: %w", err)
+	}
+	return sub, nil
 }
 
 func (ss SubscriptionUsecase) GetSubscription(userUuid uuid.UUID) (*models.Subscription, error) {

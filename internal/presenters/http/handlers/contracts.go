@@ -7,6 +7,7 @@ import (
 
 type SubscriptionUsecase interface {
 	CreateSubscription(userUuidStr, subscriptionTypeStr, subscriptionDurationStr string) (*models.Subscription, error)
+	CreateFreeTrial(userUuidStr string) (*models.Subscription, error)
 	GetSubscription(userUuid uuid.UUID) (*models.Subscription, error)
 	DeleteSubscription(userUuid uuid.UUID) error
 }

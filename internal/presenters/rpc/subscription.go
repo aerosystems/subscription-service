@@ -1,7 +1,6 @@
 package RpcServer
 
 import (
-	"github.com/aerosystems/subscription-service/internal/models"
 	"github.com/google/uuid"
 	"time"
 )
@@ -14,7 +13,8 @@ type SubsRPCPayload struct {
 
 func (s Server) CreateFreeTrial(payload SubsRPCPayload, resp *string) error {
 	*resp = "ok"
-	return s.subscriptionUsecase.CreateFreeTrial(payload.UserUuid, models.SubscriptionTypeFromString(payload.Kind))
+	_, err := s.subscriptionUsecase.CreateFreeTrial(payload.UserUuid.String())
+	return err
 }
 
 func (s Server) GetSubscription(userUuid uuid.UUID, resp *SubsRPCPayload) error {
