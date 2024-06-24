@@ -19,7 +19,7 @@ func NewFirebaseAuth(client *auth.Client) *FirebaseAuth {
 	}
 }
 
-func (fa FirebaseAuth) RoleBased(roles ...models.Role) echo.MiddlewareFunc {
+func (fa FirebaseAuth) RoleBasedAuth(roles ...models.Role) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			ctx := c.Request().Context()
@@ -34,6 +34,7 @@ func (fa FirebaseAuth) RoleBased(roles ...models.Role) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid token")
 			}
 
+			//TODO: Implement role based access control
 			//if !isAccess(roles, token.Claims["role"].(string)) {
 			//	return echo.NewHTTPError(http.StatusForbidden, "access denied")
 			//}

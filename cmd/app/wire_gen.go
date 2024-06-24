@@ -36,6 +36,7 @@ func InitApp() *App {
 	config := ProvideConfig()
 	client := ProvideFirebaseAuthClient(config)
 	firebaseAuth := ProvideFirebaseAuthMiddleware(client)
+	xApiKeyAuth := ProvideXAPiKeyMiddleware(config)
 	baseHandler := ProvideBaseHandler(logrusLogger, config)
 	firestoreClient := ProvideFirestoreClient(config)
 	subscriptionRepo := ProvideSubscriptionRepo(firestoreClient)
@@ -48,7 +49,7 @@ func InitApp() *App {
 	v := ProvidePaymentMap(monobankStrategy)
 	paymentUsecase := ProvidePaymentUsecase(invoiceRepo, priceRepo, v)
 	paymentHandler := ProvidePaymentHandler(baseHandler, paymentUsecase)
-	server := ProvideHttpServer(logrusLogger, firebaseAuth, handler, paymentHandler)
+	server := ProvideHttpServer(logrusLogger, firebaseAuth, xApiKeyAuth, handler, paymentHandler)
 	rpcServerServer := ProvideRpcServer(logrusLogger, subscriptionUsecase)
 	app := ProvideApp(logrusLogger, config, server, rpcServerServer)
 	return app
@@ -111,8 +112,8 @@ func ProvideInvoiceRepo(client *firestore.Client) *fire.InvoiceRepo {
 
 // wire.go:
 
-func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.FirebaseAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
-	return HttpServer.NewServer(log, firebaseAuthMiddleware, subscriptionHandler, paymentHandler)
+func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.FirebaseAuth, xApiKeyAuthMiddleware *middleware.XApiKeyAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
+	return HttpServer.NewServer(log, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
 }
 
 func ProvideLogrusLogger(log *logger.Logger) *logrus.Logger {
@@ -146,6 +147,14 @@ func ProvideFirestoreClient(cfg *config.Config) *firestore.Client {
 
 func ProvideFirebaseAuthMiddleware(client *auth.Client) *middleware.FirebaseAuth {
 	return middleware.NewFirebaseAuth(client)
+}
+
+func ProvideXAPiKeyMiddleware(cfg *config.Config) *middleware.XApiKeyAuth {
+	xApiKeyAuthMiddleware, err := middleware.NewXApiKeyAuth(cfg.ApiKey)
+	if err != nil {
+		panic(err)
+	}
+	return xApiKeyAuthMiddleware
 }
 
 func ProvideFirebaseAuthClient(cfg *config.Config) *auth.Client {

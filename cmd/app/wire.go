@@ -54,6 +54,7 @@ func InitApp() *App {
 		ProvideFirebaseAuthMiddleware,
 		ProvideFirebaseAuthClient,
 		ProvideInvoiceRepo,
+		ProvideXAPiKeyMiddleware,
 	),
 	)
 }
@@ -70,8 +71,8 @@ func ProvideConfig() *config.Config {
 	panic(wire.Build(config.NewConfig))
 }
 
-func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.FirebaseAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
-	return HttpServer.NewServer(log, firebaseAuthMiddleware, subscriptionHandler, paymentHandler)
+func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.FirebaseAuth, xApiKeyAuthMiddleware *middleware.XApiKeyAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
+	return HttpServer.NewServer(log, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
 }
 
 func ProvideRpcServer(log *logrus.Logger, subscriptionUsecase RpcServer.SubscriptionUsecase) *RpcServer.Server {
@@ -139,6 +140,14 @@ func ProvideInvoiceRepo(client *firestore.Client) *fire.InvoiceRepo {
 
 func ProvideFirebaseAuthMiddleware(client *auth.Client) *middleware.FirebaseAuth {
 	return middleware.NewFirebaseAuth(client)
+}
+
+func ProvideXAPiKeyMiddleware(cfg *config.Config) *middleware.XApiKeyAuth {
+	xApiKeyAuthMiddleware, err := middleware.NewXApiKeyAuth(cfg.ApiKey)
+	if err != nil {
+		panic(err)
+	}
+	return xApiKeyAuthMiddleware
 }
 
 func ProvideFirebaseAuthClient(cfg *config.Config) *auth.Client {

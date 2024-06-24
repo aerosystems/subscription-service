@@ -25,7 +25,7 @@ type InvoiceResponse struct {
 // @Produce  json
 // @Param payment_method path string true "payment method" Enums(monobank)
 // @Param invoice body InvoiceRequest true "invoice"
-// @Security ApiKeyAuth
+// @Security XApiKeyAuth
 // @Success 201 {object} Response{data=InvoiceResponse}
 // @Failure 400 {object} Response
 // @Failure 401 {object} Response

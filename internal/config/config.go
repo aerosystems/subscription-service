@@ -7,6 +7,7 @@ import (
 type Config struct {
 	Mode                         string
 	WebPort                      int
+	ApiKey                       string
 	GcpProjectId                 string
 	GoogleApplicationCredentials string
 	MonobankToken                string
@@ -21,6 +22,7 @@ func NewConfig() *Config {
 		WebPort:                      viper.GetInt("PORT"),
 		GcpProjectId:                 viper.GetString("GCP_PROJECT_ID"),
 		GoogleApplicationCredentials: viper.GetString("GOOGLE_APPLICATION_CREDENTIALS"),
+		ApiKey:                       viper.GetString("SBS_API_KEY"),
 		MonobankToken:                viper.GetString("SBS_MONOBANK_TOKEN"),
 		MonobankRedirectUrl:          viper.GetString("SBS_MONOBANK_REDIRECT_URL"),
 		MonobankWebHookUrl:           viper.GetString("SBS_MONOBANK_WEBHOOK_URL"),

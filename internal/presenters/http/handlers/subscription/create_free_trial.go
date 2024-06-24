@@ -1,6 +1,7 @@
 package subscription
 
 import (
+	"encoding/json"
 	"errors"
 	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
 	"github.com/labstack/echo/v4"
@@ -12,6 +13,13 @@ type CreateFreeTrialRequest struct {
 }
 
 type CreateFreeTrialRequestBody struct {
+	Message struct {
+		Data []byte `json:"data"`
+	} `json:"message"`
+	Subscription string `json:"subscription"`
+}
+
+type CreateSubscriptionEvent struct {
 	CustomerUuid string `json:"customerUuid"`
 }
 
@@ -35,7 +43,12 @@ func (sh Handler) CreateFreeTrial(c echo.Context) error {
 		return sh.ErrorResponse(c, http.StatusUnprocessableEntity, "invalid request body", err)
 	}
 
-	subscription, err := sh.subscriptionUsecase.CreateFreeTrial(requestPayload.CustomerUuid)
+	var event CreateSubscriptionEvent
+	if err := json.Unmarshal(requestPayload.Message.Data, &event); err != nil {
+		return sh.ErrorResponse(c, http.StatusUnprocessableEntity, "invalid request body", err)
+	}
+
+	subscription, err := sh.subscriptionUsecase.CreateFreeTrial(event.CustomerUuid)
 	if err != nil {
 		var apiErr CustomErrors.ApiError
 		if errors.As(err, &apiErr) {

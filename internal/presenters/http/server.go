@@ -15,6 +15,7 @@ type Server struct {
 	log                    *logrus.Logger
 	echo                   *echo.Echo
 	firebaseAuthMiddleware *middleware.FirebaseAuth
+	xApiKeyAuthMiddleware  *middleware.XApiKeyAuth
 	subscriptionHandler    *subscription.Handler
 	paymentHandler         *payment.Handler
 }
@@ -22,6 +23,7 @@ type Server struct {
 func NewServer(
 	log *logrus.Logger,
 	firebaseAuthMiddleware *middleware.FirebaseAuth,
+	xApiKeyMiddleware *middleware.XApiKeyAuth,
 	subscriptionHandler *subscription.Handler,
 	paymentHandler *payment.Handler,
 ) *Server {
@@ -29,6 +31,7 @@ func NewServer(
 		log:                    log,
 		echo:                   echo.New(),
 		firebaseAuthMiddleware: firebaseAuthMiddleware,
+		xApiKeyAuthMiddleware:  xApiKeyMiddleware,
 		subscriptionHandler:    subscriptionHandler,
 		paymentHandler:         paymentHandler,
 	}
