@@ -26,7 +26,7 @@ func NewSubscriptionRepo(client *firestore.Client) *SubscriptionRepo {
 
 type SubscriptionFire struct {
 	UserUuid   string    `firestore:"user_uuid"`
-	Kind       string    `firestore:"kind"`
+	Type       string    `firestore:"type"`
 	Duration   string    `firestore:"duration"`
 	AccessTime time.Time `firestore:"access_time"`
 	CreatedAt  time.Time `firestore:"created_at"`
@@ -36,7 +36,7 @@ type SubscriptionFire struct {
 func (s *SubscriptionFire) ToModel() *models.Subscription {
 	return &models.Subscription{
 		UserUuid:   uuid.MustParse(s.UserUuid),
-		Type:       models.SubscriptionTypeFromString(s.Kind),
+		Type:       models.SubscriptionTypeFromString(s.Type),
 		Duration:   models.SubscriptionDurationFromString(s.Duration),
 		AccessTime: s.AccessTime,
 		CreatedAt:  s.CreatedAt,
@@ -47,7 +47,7 @@ func (s *SubscriptionFire) ToModel() *models.Subscription {
 func ModelToSubscriptionFire(subscription *models.Subscription) *SubscriptionFire {
 	return &SubscriptionFire{
 		UserUuid:   subscription.UserUuid.String(),
-		Kind:       subscription.Type.String(),
+		Type:       subscription.Type.String(),
 		Duration:   subscription.Duration.String(),
 		AccessTime: subscription.AccessTime,
 		CreatedAt:  subscription.CreatedAt,
