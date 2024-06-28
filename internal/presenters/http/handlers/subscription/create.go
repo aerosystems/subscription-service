@@ -27,7 +27,7 @@ type CreateSubscriptionResponseBody struct {
 
 func ModelToCreateSubscriptionResponse(subscription *models.Subscription) *CreateSubscriptionResponseBody {
 	return &CreateSubscriptionResponseBody{
-		CustomerUuid:         subscription.UserUuid.String(),
+		CustomerUuid:         subscription.CustomerUuid.String(),
 		SubscriptionType:     subscription.Type.String(),
 		SubscriptionDuration: subscription.Duration.String(),
 		AccessTime:           subscription.AccessTime.String(),

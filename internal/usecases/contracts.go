@@ -14,7 +14,7 @@ type InvoiceRepository interface {
 
 type SubscriptionRepository interface {
 	Create(ctx context.Context, subscription *models.Subscription) error
-	GetByUserUuid(ctx context.Context, userUuid uuid.UUID) (*models.Subscription, error)
+	GetByCustomerUuid(ctx context.Context, userUuid uuid.UUID) (*models.Subscription, error)
 	Update(ctx context.Context, subscription *models.Subscription) error
 	Delete(ctx context.Context, subscription *models.Subscription) error
 }

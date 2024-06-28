@@ -22,7 +22,7 @@ func NewInvoiceRepo(client *firestore.Client) *InvoiceRepo {
 
 type InvoiceFire struct {
 	Amount             int       `firestore:"amount"`
-	UserUuid           string    `firestore:"user_uuid"`
+	CustomerUuid       string    `firestore:"customer_uuid"`
 	InvoiceUuid        string    `firestore:"invoice_uuid"`
 	PaymentMethod      string    `firestore:"payment_method"`
 	AcquiringInvoiceId string    `firestore:"acquiring_invoice_id"`
@@ -32,7 +32,7 @@ type InvoiceFire struct {
 }
 
 func (i *InvoiceFire) ToModel() (models.Invoice, error) {
-	userId, err := uuid.Parse(i.UserUuid)
+	customerId, err := uuid.Parse(i.CustomerUuid)
 	if err != nil {
 		return models.Invoice{}, err
 	}
@@ -43,7 +43,7 @@ func (i *InvoiceFire) ToModel() (models.Invoice, error) {
 
 	return models.Invoice{
 		Amount:             i.Amount,
-		UserUuid:           userId,
+		CustomerUuid:       customerId,
 		InvoiceUuid:        invoiceUuid,
 		PaymentMethod:      models.NewPaymentMethod(i.PaymentMethod),
 		AcquiringInvoiceId: i.AcquiringInvoiceId,

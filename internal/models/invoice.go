@@ -8,7 +8,7 @@ import (
 type Invoice struct {
 	Id                 int
 	Amount             int
-	UserUuid           uuid.UUID
+	CustomerUuid       uuid.UUID
 	InvoiceUuid        uuid.UUID
 	PaymentMethod      PaymentMethod
 	AcquiringInvoiceId string

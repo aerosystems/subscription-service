@@ -6,12 +6,12 @@ import (
 )
 
 type Subscription struct {
-	UserUuid   uuid.UUID
-	Type       SubscriptionType
-	Duration   SubscriptionDuration
-	AccessTime time.Time
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	CustomerUuid uuid.UUID
+	Type         SubscriptionType
+	Duration     SubscriptionDuration
+	AccessTime   time.Time
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 type SubscriptionType struct {

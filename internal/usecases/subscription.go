@@ -21,12 +21,12 @@ func NewSubscriptionUsecase(subsRepo SubscriptionRepository) *SubscriptionUsecas
 
 func NewSubscription(userUuid uuid.UUID, subscriptionType models.SubscriptionType, subscriptionDuration models.SubscriptionDuration) *models.Subscription {
 	return &models.Subscription{
-		UserUuid:   userUuid,
-		Type:       subscriptionType,
-		Duration:   subscriptionDuration,
-		AccessTime: time.Now().Add(subscriptionDuration.GetTimeDuration()),
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		CustomerUuid: userUuid,
+		Type:         subscriptionType,
+		Duration:     subscriptionDuration,
+		AccessTime:   time.Now().Add(subscriptionDuration.GetTimeDuration()),
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 }
 
@@ -66,12 +66,12 @@ func (ss SubscriptionUsecase) CreateFreeTrial(userUuidStr string) (*models.Subsc
 
 func (ss SubscriptionUsecase) GetSubscription(userUuid uuid.UUID) (*models.Subscription, error) {
 	ctx := context.Background()
-	return ss.subsRepo.GetByUserUuid(ctx, userUuid)
+	return ss.subsRepo.GetByCustomerUuid(ctx, userUuid)
 }
 
 func (ss SubscriptionUsecase) DeleteSubscription(userUuid uuid.UUID) error {
 	ctx := context.Background()
-	sub, err := ss.subsRepo.GetByUserUuid(ctx, userUuid)
+	sub, err := ss.subsRepo.GetByCustomerUuid(ctx, userUuid)
 	if err != nil {
 		return err
 	}
