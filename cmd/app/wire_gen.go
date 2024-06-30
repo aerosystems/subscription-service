@@ -11,6 +11,7 @@ import (
 	"context"
 	"firebase.google.com/go/auth"
 	"github.com/aerosystems/subscription-service/internal/config"
+	"github.com/aerosystems/subscription-service/internal/infrastructure/adapters/broker"
 	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/fire"
 	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/memory"
 	"github.com/aerosystems/subscription-service/internal/models"
@@ -24,6 +25,7 @@ import (
 	"github.com/aerosystems/subscription-service/pkg/firebase"
 	"github.com/aerosystems/subscription-service/pkg/logger"
 	"github.com/aerosystems/subscription-service/pkg/monobank"
+	"github.com/aerosystems/subscription-service/pkg/pubsub"
 	"github.com/sirupsen/logrus"
 )
 
@@ -40,7 +42,9 @@ func InitApp() *App {
 	baseHandler := ProvideBaseHandler(logrusLogger, config)
 	firestoreClient := ProvideFirestoreClient(config)
 	subscriptionRepo := ProvideSubscriptionRepo(firestoreClient)
-	subscriptionUsecase := ProvideSubscriptionUsecase(subscriptionRepo)
+	pubSubClient := ProvidePubSubClient(config)
+	projectEventsAdapter := ProvideProjectEventsAdapter(pubSubClient, config)
+	subscriptionUsecase := ProvideSubscriptionUsecase(subscriptionRepo, projectEventsAdapter)
 	handler := ProvideSubscriptionHandler(baseHandler, subscriptionUsecase)
 	invoiceRepo := ProvideInvoiceRepo(firestoreClient)
 	priceRepo := ProvidePriceRepo()
@@ -90,8 +94,8 @@ func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo use
 	return paymentUsecase
 }
 
-func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository) *usecases.SubscriptionUsecase {
-	subscriptionUsecase := usecases.NewSubscriptionUsecase(subscriptionRepo)
+func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository, projectAdapter usecases.ProjectAdapter) *usecases.SubscriptionUsecase {
+	subscriptionUsecase := usecases.NewSubscriptionUsecase(subscriptionRepo, projectAdapter)
 	return subscriptionUsecase
 }
 
@@ -163,4 +167,16 @@ func ProvideFirebaseAuthClient(cfg *config.Config) *auth.Client {
 		panic(err)
 	}
 	return app.Client
+}
+
+func ProvidePubSubClient(cfg *config.Config) *PubSub.Client {
+	client, err := PubSub.NewClientWithAuth(cfg.GoogleApplicationCredentials)
+	if err != nil {
+		panic(err)
+	}
+	return client
+}
+
+func ProvideProjectEventsAdapter(pubSubClient *PubSub.Client, cfg *config.Config) *broker.ProjectEventsAdapter {
+	return broker.NewProjectEventsAdapter(pubSubClient, cfg.ProjectTopicId, cfg.ProjectSubName, cfg.ProjectCreateEndpoint, cfg.ProjectServiceApiKey)
 }

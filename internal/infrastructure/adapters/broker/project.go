@@ -35,9 +35,7 @@ type CreateProjectEvent struct {
 	CustomerUuid string `json:"customerUuid"`
 }
 
-func (s ProjectEventsAdapter) PublishCreateProjectEvent(
-	customerUuid string,
-) error {
+func (s ProjectEventsAdapter) PublishCreateProjectEvent(customerUuid string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 

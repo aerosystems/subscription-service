@@ -10,18 +10,20 @@ import (
 )
 
 type SubscriptionUsecase struct {
-	subsRepo SubscriptionRepository
+	subsRepo       SubscriptionRepository
+	projectAdapter ProjectAdapter
 }
 
-func NewSubscriptionUsecase(subsRepo SubscriptionRepository) *SubscriptionUsecase {
+func NewSubscriptionUsecase(subsRepo SubscriptionRepository, projectAdapter ProjectAdapter) *SubscriptionUsecase {
 	return &SubscriptionUsecase{
-		subsRepo: subsRepo,
+		subsRepo:       subsRepo,
+		projectAdapter: projectAdapter,
 	}
 }
 
-func NewSubscription(userUuid uuid.UUID, subscriptionType models.SubscriptionType, subscriptionDuration models.SubscriptionDuration) *models.Subscription {
+func NewSubscription(customerUuid uuid.UUID, subscriptionType models.SubscriptionType, subscriptionDuration models.SubscriptionDuration) *models.Subscription {
 	return &models.Subscription{
-		CustomerUuid: userUuid,
+		CustomerUuid: customerUuid,
 		Type:         subscriptionType,
 		Duration:     subscriptionDuration,
 		AccessTime:   time.Now().Add(subscriptionDuration.GetTimeDuration()),
@@ -30,8 +32,8 @@ func NewSubscription(userUuid uuid.UUID, subscriptionType models.SubscriptionTyp
 	}
 }
 
-func (ss SubscriptionUsecase) CreateSubscription(userUuidStr, subscriptionTypeStr, subscriptionDurationStr string) (*models.Subscription, error) {
-	userUuid, err := uuid.Parse(userUuidStr)
+func (ss SubscriptionUsecase) CreateSubscription(customerUuidStr, subscriptionTypeStr, subscriptionDurationStr string) (*models.Subscription, error) {
+	customerUuid, err := uuid.Parse(customerUuidStr)
 	if err != nil {
 		return nil, CustomErrors.ErrInvalidCustomerUuid
 	}
@@ -43,7 +45,7 @@ func (ss SubscriptionUsecase) CreateSubscription(userUuidStr, subscriptionTypeSt
 	if subscriptionDuration == models.UnknownSubscriptionDuration {
 		return nil, CustomErrors.ErrInvalidSubscriptionDuration
 	}
-	sub := NewSubscription(userUuid, subscriptionType, subscriptionDuration)
+	sub := NewSubscription(customerUuid, subscriptionType, subscriptionDuration)
 	ctx := context.Background()
 	if err := ss.subsRepo.Create(ctx, sub); err != nil {
 		return nil, fmt.Errorf("could not create subscription: %w", err)
@@ -51,12 +53,15 @@ func (ss SubscriptionUsecase) CreateSubscription(userUuidStr, subscriptionTypeSt
 	return sub, nil
 }
 
-func (ss SubscriptionUsecase) CreateFreeTrial(userUuidStr string) (*models.Subscription, error) {
-	userUuid, err := uuid.Parse(userUuidStr)
+func (ss SubscriptionUsecase) CreateFreeTrial(customerUuidStr string) (*models.Subscription, error) {
+	customerUuid, err := uuid.Parse(customerUuidStr)
 	if err != nil {
 		return nil, CustomErrors.ErrInvalidCustomerUuid
 	}
-	sub := NewSubscription(userUuid, models.TrialSubscriptionType, models.OneWeekSubscriptionDuration)
+	sub := NewSubscription(customerUuid, models.TrialSubscriptionType, models.OneWeekSubscriptionDuration)
+	if err := ss.projectAdapter.PublishCreateProjectEvent(customerUuidStr); err != nil {
+		return nil, fmt.Errorf("could not publish create project event: %w", err)
+	}
 	ctx := context.Background()
 	if err := ss.subsRepo.Create(ctx, sub); err != nil {
 		return nil, fmt.Errorf("could not create subscription: %w", err)
@@ -64,14 +69,14 @@ func (ss SubscriptionUsecase) CreateFreeTrial(userUuidStr string) (*models.Subsc
 	return sub, nil
 }
 
-func (ss SubscriptionUsecase) GetSubscription(userUuid uuid.UUID) (*models.Subscription, error) {
+func (ss SubscriptionUsecase) GetSubscription(customerUuid uuid.UUID) (*models.Subscription, error) {
 	ctx := context.Background()
-	return ss.subsRepo.GetByCustomerUuid(ctx, userUuid)
+	return ss.subsRepo.GetByCustomerUuid(ctx, customerUuid)
 }
 
-func (ss SubscriptionUsecase) DeleteSubscription(userUuid uuid.UUID) error {
+func (ss SubscriptionUsecase) DeleteSubscription(customerUuid uuid.UUID) error {
 	ctx := context.Background()
-	sub, err := ss.subsRepo.GetByCustomerUuid(ctx, userUuid)
+	sub, err := ss.subsRepo.GetByCustomerUuid(ctx, customerUuid)
 	if err != nil {
 		return err
 	}

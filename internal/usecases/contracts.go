@@ -23,3 +23,7 @@ type PriceRepository interface {
 	GetPrice(kindSubscription models.SubscriptionType, durationSubscription models.SubscriptionDuration) (int, error)
 	GetAll() map[models.SubscriptionType]map[models.SubscriptionDuration]int
 }
+
+type ProjectAdapter interface {
+	PublishCreateProjectEvent(customerUuid string) error
+}
