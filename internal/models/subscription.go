@@ -6,6 +6,7 @@ import (
 )
 
 type Subscription struct {
+	Uuid         uuid.UUID
 	CustomerUuid uuid.UUID
 	Type         SubscriptionType
 	Duration     SubscriptionDuration

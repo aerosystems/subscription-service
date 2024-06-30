@@ -25,6 +25,7 @@ func NewSubscriptionRepo(client *firestore.Client) *SubscriptionRepo {
 }
 
 type SubscriptionFire struct {
+	Uuid         string    `firestore:"uuid"`
 	CustomerUuid string    `firestore:"customer_uuid"`
 	Type         string    `firestore:"type"`
 	Duration     string    `firestore:"duration"`
@@ -35,6 +36,7 @@ type SubscriptionFire struct {
 
 func (s *SubscriptionFire) ToModel() *models.Subscription {
 	return &models.Subscription{
+		Uuid:         uuid.MustParse(s.Uuid),
 		CustomerUuid: uuid.MustParse(s.CustomerUuid),
 		Type:         models.SubscriptionTypeFromString(s.Type),
 		Duration:     models.SubscriptionDurationFromString(s.Duration),
@@ -46,6 +48,7 @@ func (s *SubscriptionFire) ToModel() *models.Subscription {
 
 func ModelToSubscriptionFire(subscription *models.Subscription) *SubscriptionFire {
 	return &SubscriptionFire{
+		Uuid:         subscription.Uuid.String(),
 		CustomerUuid: subscription.CustomerUuid.String(),
 		Type:         subscription.Type.String(),
 		Duration:     subscription.Duration.String(),
@@ -76,7 +79,7 @@ func (r *SubscriptionRepo) GetByCustomerUuid(ctx context.Context, customerUuid u
 func (r *SubscriptionRepo) Create(ctx context.Context, subscription *models.Subscription) error {
 	c, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
-	_, err := r.client.Collection("subscriptions").Doc(subscription.CustomerUuid.String()).Set(c, ModelToSubscriptionFire(subscription))
+	_, err := r.client.Collection("subscriptions").Doc(subscription.Uuid.String()).Set(c, ModelToSubscriptionFire(subscription))
 	if err != nil {
 		return err
 	}
@@ -86,7 +89,7 @@ func (r *SubscriptionRepo) Create(ctx context.Context, subscription *models.Subs
 func (r *SubscriptionRepo) Update(ctx context.Context, subscription *models.Subscription) error {
 	c, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
-	_, err := r.client.Collection("subscriptions").Doc(subscription.CustomerUuid.String()).Set(c, ModelToSubscriptionFire(subscription))
+	_, err := r.client.Collection("subscriptions").Doc(subscription.Uuid.String()).Set(c, ModelToSubscriptionFire(subscription))
 	if err != nil {
 		return err
 	}
@@ -96,7 +99,7 @@ func (r *SubscriptionRepo) Update(ctx context.Context, subscription *models.Subs
 func (r *SubscriptionRepo) Delete(ctx context.Context, subscription *models.Subscription) error {
 	c, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
-	_, err := r.client.Collection("subscriptions").Doc(ModelToSubscriptionFire(subscription).CustomerUuid).Delete(c)
+	_, err := r.client.Collection("subscriptions").Doc(ModelToSubscriptionFire(subscription).Uuid).Delete(c)
 	if err != nil {
 		return err
 	}

@@ -25,5 +25,5 @@ type PriceRepository interface {
 }
 
 type ProjectAdapter interface {
-	PublishCreateProjectEvent(customerUuid string) error
+	PublishCreateProjectEvent(customerUuid uuid.UUID) error
 }

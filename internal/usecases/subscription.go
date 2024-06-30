@@ -23,6 +23,7 @@ func NewSubscriptionUsecase(subsRepo SubscriptionRepository, projectAdapter Proj
 
 func NewSubscription(customerUuid uuid.UUID, subscriptionType models.SubscriptionType, subscriptionDuration models.SubscriptionDuration) *models.Subscription {
 	return &models.Subscription{
+		Uuid:         uuid.New(),
 		CustomerUuid: customerUuid,
 		Type:         subscriptionType,
 		Duration:     subscriptionDuration,
@@ -59,7 +60,7 @@ func (ss SubscriptionUsecase) CreateFreeTrial(customerUuidStr string) (*models.S
 		return nil, CustomErrors.ErrInvalidCustomerUuid
 	}
 	sub := NewSubscription(customerUuid, models.TrialSubscriptionType, models.OneWeekSubscriptionDuration)
-	if err := ss.projectAdapter.PublishCreateProjectEvent(customerUuidStr); err != nil {
+	if err := ss.projectAdapter.PublishCreateProjectEvent(customerUuid); err != nil {
 		return nil, fmt.Errorf("could not publish create project event: %w", err)
 	}
 	ctx := context.Background()
