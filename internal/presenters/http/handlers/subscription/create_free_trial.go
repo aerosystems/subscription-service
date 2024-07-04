@@ -32,10 +32,10 @@ type CreateSubscriptionEvent struct {
 // @Security BearerAuth
 // @Param raw body CreateFreeTrialRequestBody true "Create free trial"
 // @Success 201 {object} CreateSubscriptionResponseBody
-// @Failure 400 {object} ErrorResponse
-// @Failure 401 {object} ErrorResponse
-// @Failure 403 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Failure 400 {object} echo.HTTPError
+// @Failure 401 {object} echo.HTTPError
+// @Failure 403 {object} echo.HTTPError
+// @Failure 500 {object} echo.HTTPError
 // @Router /v1/subscriptions/create-free-trial [post]
 func (sh Handler) CreateFreeTrial(c echo.Context) error {
 	var requestPayload CreateFreeTrialRequest

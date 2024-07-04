@@ -1,10 +1,14 @@
 package CustomErrors
 
-import "net/http"
+import (
+	"google.golang.org/grpc/codes"
+	"net/http"
+)
 
 type ApiError struct {
 	Message  string
 	HttpCode int
+	GrpcCode codes.Code
 }
 
 func (e ApiError) Error() string {
@@ -12,7 +16,7 @@ func (e ApiError) Error() string {
 }
 
 var (
-	ErrInvalidCustomerUuid         = ApiError{Message: "invalid customer uuid", HttpCode: http.StatusBadRequest}
-	ErrInvalidSubscriptionType     = ApiError{Message: "invalid subscription type", HttpCode: http.StatusBadRequest}
-	ErrInvalidSubscriptionDuration = ApiError{Message: "invalid subscription duration", HttpCode: http.StatusBadRequest}
+	ErrInvalidCustomerUuid         = ApiError{Message: "Invalid customer uuid", HttpCode: http.StatusBadRequest, GrpcCode: codes.InvalidArgument}
+	ErrInvalidSubscriptionType     = ApiError{Message: "Invalid subscription type", HttpCode: http.StatusBadRequest, GrpcCode: codes.InvalidArgument}
+	ErrInvalidSubscriptionDuration = ApiError{Message: "Invalid subscription duration", HttpCode: http.StatusBadRequest, GrpcCode: codes.InvalidArgument}
 )
