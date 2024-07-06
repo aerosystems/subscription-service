@@ -12,28 +12,28 @@ import (
 const webPort = 80
 
 type Server struct {
-	log                    *logrus.Logger
-	echo                   *echo.Echo
-	firebaseAuthMiddleware *middleware.FirebaseAuth
-	xApiKeyAuthMiddleware  *middleware.XApiKeyAuth
-	subscriptionHandler    *subscription.Handler
-	paymentHandler         *payment.Handler
+	log                         *logrus.Logger
+	echo                        *echo.Echo
+	firebaseAuthMiddleware      *middleware.FirebaseAuth
+	serviceApiKeyAuthMiddleware *middleware.ServiceApiKeyAuth
+	subscriptionHandler         *subscription.Handler
+	paymentHandler              *payment.Handler
 }
 
 func NewServer(
 	log *logrus.Logger,
 	firebaseAuthMiddleware *middleware.FirebaseAuth,
-	xApiKeyMiddleware *middleware.XApiKeyAuth,
+	serviceApiKeyAuthMiddleware *middleware.ServiceApiKeyAuth,
 	subscriptionHandler *subscription.Handler,
 	paymentHandler *payment.Handler,
 ) *Server {
 	return &Server{
-		log:                    log,
-		echo:                   echo.New(),
-		firebaseAuthMiddleware: firebaseAuthMiddleware,
-		xApiKeyAuthMiddleware:  xApiKeyMiddleware,
-		subscriptionHandler:    subscriptionHandler,
-		paymentHandler:         paymentHandler,
+		log:                         log,
+		echo:                        echo.New(),
+		firebaseAuthMiddleware:      firebaseAuthMiddleware,
+		serviceApiKeyAuthMiddleware: serviceApiKeyAuthMiddleware,
+		subscriptionHandler:         subscriptionHandler,
+		paymentHandler:              paymentHandler,
 	}
 }
 

@@ -28,7 +28,7 @@ func ModelToSubscriptionResponse(subscription *models.Subscription) *GetSubscrip
 // @Tags subscriptions
 // @Accept  json
 // @Produce  json
-// @Security XApiKeyAuth
+// @Security ServiceApiKeyAuth
 // @Success 200 {object} Response{data=models.Subscription}
 // @Failure 401 {object} Response
 // @Failure 500 {object} Response

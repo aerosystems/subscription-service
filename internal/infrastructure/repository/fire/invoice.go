@@ -10,6 +10,10 @@ import (
 	"time"
 )
 
+const (
+	collectionName = "invoices"
+)
+
 type InvoiceRepo struct {
 	client *firestore.Client
 }
@@ -54,7 +58,7 @@ func (i *InvoiceFire) ToModel() (models.Invoice, error) {
 }
 
 func (r *InvoiceRepo) Create(ctx context.Context, invoice *models.Invoice) error {
-	_, _, err := r.client.Collection("invoices").Add(ctx, invoice)
+	_, _, err := r.client.Collection(collectionName).Add(ctx, invoice)
 	if err != nil {
 		return err
 	}
@@ -66,7 +70,7 @@ func (r *InvoiceRepo) GetByAcquiringInvoiceId(ctx context.Context, acquiringInvo
 	defer cancel()
 
 	var invoiceFire InvoiceFire
-	iter := r.client.Collection("invoices").Where("acquiring_invoice_id", "==", acquiringInvoiceId).Documents(c)
+	iter := r.client.Collection(collectionName).Where("acquiring_invoice_id", "==", acquiringInvoiceId).Documents(c)
 	for {
 		doc, err := iter.Next()
 		if errors.Is(err, iterator.Done) {
@@ -88,7 +92,7 @@ func (r *InvoiceRepo) Update(ctx context.Context, invoice *models.Invoice) error
 	c, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 
-	_, err := r.client.Collection("invoices").Doc(invoice.InvoiceUuid.String()).Set(c, invoice)
+	_, err := r.client.Collection(collectionName).Doc(invoice.InvoiceUuid.String()).Set(c, invoice)
 	if err != nil {
 		return err
 	}

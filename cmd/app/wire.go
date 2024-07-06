@@ -76,7 +76,7 @@ func ProvideConfig() *config.Config {
 	panic(wire.Build(config.NewConfig))
 }
 
-func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.FirebaseAuth, xApiKeyAuthMiddleware *middleware.XApiKeyAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
+func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.FirebaseAuth, xApiKeyAuthMiddleware *middleware.ServiceApiKeyAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
 	return HttpServer.NewServer(log, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
 }
 
@@ -147,8 +147,8 @@ func ProvideFirebaseAuthMiddleware(client *auth.Client) *middleware.FirebaseAuth
 	return middleware.NewFirebaseAuth(client)
 }
 
-func ProvideXAPiKeyMiddleware(cfg *config.Config) *middleware.XApiKeyAuth {
-	xApiKeyAuthMiddleware, err := middleware.NewXApiKeyAuth(cfg.ApiKey)
+func ProvideXAPiKeyMiddleware(cfg *config.Config) *middleware.ServiceApiKeyAuth {
+	xApiKeyAuthMiddleware, err := middleware.NewServiceApiKeyAuth(cfg.ApiKey)
 	if err != nil {
 		panic(err)
 	}
