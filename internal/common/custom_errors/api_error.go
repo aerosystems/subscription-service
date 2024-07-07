@@ -16,6 +16,8 @@ func (e ApiError) Error() string {
 }
 
 var (
+	ErrInvalidRequestBody          = ApiError{Message: "Invalid request body", HttpCode: http.StatusUnprocessableEntity, GrpcCode: codes.InvalidArgument}
+	ErrInvalidRequestPayload       = ApiError{Message: "Invalid request payload", HttpCode: http.StatusBadRequest, GrpcCode: codes.InvalidArgument}
 	ErrInvalidCustomerUuid         = ApiError{Message: "Invalid customer uuid", HttpCode: http.StatusBadRequest, GrpcCode: codes.InvalidArgument}
 	ErrInvalidSubscriptionType     = ApiError{Message: "Invalid subscription type", HttpCode: http.StatusBadRequest, GrpcCode: codes.InvalidArgument}
 	ErrInvalidSubscriptionDuration = ApiError{Message: "Invalid subscription duration", HttpCode: http.StatusBadRequest, GrpcCode: codes.InvalidArgument}

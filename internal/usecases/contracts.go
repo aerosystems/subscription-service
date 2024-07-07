@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/aerosystems/subscription-service/internal/models"
 	"github.com/google/uuid"
+	"time"
 )
 
 type InvoiceRepository interface {
@@ -25,5 +26,5 @@ type PriceRepository interface {
 }
 
 type ProjectAdapter interface {
-	PublishCreateProjectEvent(customerUuid uuid.UUID) error
+	PublishCreateProjectEvent(customerUuid uuid.UUID, subscriptionType models.SubscriptionType, accessTime time.Time) error
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/aerosystems/subscription-service/internal/models"
 	PubSub "github.com/aerosystems/subscription-service/pkg/pubsub"
 	"github.com/google/uuid"
 	"time"
@@ -33,10 +34,22 @@ func NewProjectEventsAdapter(pubsubClient *PubSub.Client, topicId, subName, crea
 }
 
 type CreateProjectEvent struct {
-	CustomerUuid string `json:"customerUuid"`
+	CustomerUuid     string    `json:"customerUuid"`
+	SubscriptionType string    `json:"subscriptionType"`
+	AccessTime       time.Time `json:"accessTime"`
 }
 
-func (s ProjectEventsAdapter) PublishCreateProjectEvent(customerUuid uuid.UUID) error {
+func (s ProjectEventsAdapter) PublishCreateProjectEvent(customerUuid uuid.UUID, subscriptionType models.SubscriptionType, accessTime time.Time) error {
+	event := CreateProjectEvent{
+		CustomerUuid:     customerUuid.String(),
+		SubscriptionType: subscriptionType.String(),
+		AccessTime:       accessTime,
+	}
+	eventData, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("failed to marshal create subscription event: %w", err)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 
@@ -67,14 +80,6 @@ func (s ProjectEventsAdapter) PublishCreateProjectEvent(customerUuid uuid.UUID) 
 		}); err != nil {
 			return fmt.Errorf("failed to create subscription: %w", err)
 		}
-	}
-
-	event := CreateProjectEvent{
-		CustomerUuid: customerUuid.String(),
-	}
-	eventData, err := json.Marshal(event)
-	if err != nil {
-		return fmt.Errorf("failed to marshal create subscription event: %w", err)
 	}
 
 	result := topic.Publish(ctx, &pubsub.Message{

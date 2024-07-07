@@ -31,5 +31,5 @@ func ModelToPriceResponse(prices map[models.SubscriptionType]map[models.Subscrip
 // @Failure 500 {object} Response
 // @Router /v1/prices [get]
 func (ph Handler) GetPrices(c echo.Context) error {
-	return ph.SuccessResponse(c, http.StatusOK, "prices for all available subscriptions, in cents", ModelToPriceResponse(ph.paymentUsecase.GetPrices()))
+	return c.JSON(http.StatusOK, ModelToPriceResponse(ph.paymentUsecase.GetPrices()))
 }

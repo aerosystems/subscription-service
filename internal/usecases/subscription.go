@@ -60,12 +60,12 @@ func (ss SubscriptionUsecase) CreateFreeTrial(customerUuidStr string) (*models.S
 		return nil, CustomErrors.ErrInvalidCustomerUuid
 	}
 	sub := NewSubscription(customerUuid, models.TrialSubscriptionType, models.OneWeekSubscriptionDuration)
-	if err := ss.projectAdapter.PublishCreateProjectEvent(customerUuid); err != nil {
-		return nil, fmt.Errorf("could not publish create project event: %w", err)
-	}
 	ctx := context.Background()
 	if err := ss.subsRepo.Create(ctx, sub); err != nil {
 		return nil, fmt.Errorf("could not create subscription: %w", err)
+	}
+	if err := ss.projectAdapter.PublishCreateProjectEvent(sub.Uuid, sub.Type, sub.AccessTime); err != nil {
+		return nil, fmt.Errorf("could not publish create project event: %w", err)
 	}
 	return sub, nil
 }

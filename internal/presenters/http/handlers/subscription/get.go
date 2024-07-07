@@ -29,15 +29,16 @@ func ModelToSubscriptionResponse(subscription *models.Subscription) *GetSubscrip
 // @Accept  json
 // @Produce  json
 // @Security ServiceApiKeyAuth
-// @Success 200 {object} Response{data=models.Subscription}
-// @Failure 401 {object} Response
-// @Failure 500 {object} Response
+// @Success 200 {object} GetSubscriptionResponse
+// @Failure 401 {object} echo.HTTPError
+// @Failure 403 {object} echo.HTTPError
+// @Failure 500 {object} echo.HTTPError
 // @Router /v1/subscriptions [get]
 func (sh Handler) GetSubscriptions(c echo.Context) error {
 	accessTokenClaims := c.Get("accessTokenClaims").(*middleware.AccessTokenClaims)
 	subscription, err := sh.subscriptionUsecase.GetSubscription(uuid.MustParse(accessTokenClaims.UserUuid))
 	if err != nil {
-		return sh.ErrorResponse(c, http.StatusInternalServerError, "could not find subscription", err)
+		return err
 	}
-	return sh.SuccessResponse(c, http.StatusOK, "subscription successfully found", ModelToSubscriptionResponse(subscription))
+	return c.JSON(http.StatusOK, ModelToSubscriptionResponse(subscription))
 }

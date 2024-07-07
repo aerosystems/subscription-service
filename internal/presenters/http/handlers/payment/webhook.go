@@ -1,6 +1,7 @@
 package payment
 
 import (
+	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
 	"github.com/aerosystems/subscription-service/internal/models"
 	"github.com/labstack/echo/v4"
 	"io"
@@ -10,14 +11,14 @@ import (
 func (ph Handler) WebhookPayment(c echo.Context) error {
 	method := models.NewPaymentMethod(c.Param("payment_method"))
 	if err := ph.paymentUsecase.SetPaymentMethod(method); err != nil {
-		return ph.ErrorResponse(c, http.StatusBadRequest, "invalid payment method", err)
+		return err
 	}
 	body, err := io.ReadAll(c.Request().Body)
 	if err != nil {
-		return ph.ErrorResponse(c, http.StatusBadRequest, "invalid request body", err)
+		return CustomErrors.ErrInvalidRequestPayload
 	}
 	if err := ph.paymentUsecase.ProcessingWebhookPayment(body, c.Request().Header); err != nil {
-		return ph.ErrorResponse(c, http.StatusInternalServerError, "could not process webhook", err)
+		return err
 	}
-	return ph.SuccessResponse(c, http.StatusOK, "webhook processed successfully", nil)
+	return c.JSON(http.StatusOK, nil)
 }

@@ -1,6 +1,7 @@
 package payment
 
 import (
+	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
 	"github.com/aerosystems/subscription-service/internal/models"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/middleware"
 	"github.com/google/uuid"
@@ -36,15 +37,15 @@ func (ph Handler) CreateInvoice(c echo.Context) error {
 	accessTokenClaims := c.Get("accessTokenClaims").(*middleware.AccessTokenClaims)
 	method := models.NewPaymentMethod(c.Param("payment_method"))
 	if err := ph.paymentUsecase.SetPaymentMethod(method); err != nil {
-		return ph.ErrorResponse(c, http.StatusBadRequest, "invalid payment method", err)
+		return err
 	}
 	var requestBody InvoiceRequest
 	if err := c.Bind(&requestBody); err != nil {
-		return ph.ErrorResponse(c, http.StatusUnprocessableEntity, "invalid request body", err)
+		return CustomErrors.ErrInvalidRequestBody
 	}
 	paymentUrl, err := ph.paymentUsecase.GetPaymentUrl(uuid.MustParse(accessTokenClaims.UserUuid), requestBody.SubscriptionType, requestBody.SubscriptionDuration)
 	if err != nil {
-		return ph.ErrorResponse(c, http.StatusInternalServerError, "could not create invoice", err)
+		return err
 	}
-	return ph.SuccessResponse(c, http.StatusCreated, "invoice successfully created", InvoiceResponse{PaymentUrl: paymentUrl})
+	return c.JSON(http.StatusCreated, InvoiceResponse{PaymentUrl: paymentUrl})
 }
