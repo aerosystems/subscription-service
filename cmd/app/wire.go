@@ -7,6 +7,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"firebase.google.com/go/auth"
+	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
 	"github.com/aerosystems/subscription-service/internal/config"
 	"github.com/aerosystems/subscription-service/internal/infrastructure/adapters/broker"
 	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/fire"
@@ -24,6 +25,7 @@ import (
 	"github.com/aerosystems/subscription-service/pkg/monobank"
 	"github.com/aerosystems/subscription-service/pkg/pubsub"
 	"github.com/google/wire"
+	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
 
@@ -60,6 +62,7 @@ func InitApp() *App {
 		ProvideXAPiKeyMiddleware,
 		ProvidePubSubClient,
 		ProvideProjectEventsAdapter,
+		ProvideCustomErrorHandler,
 	),
 	)
 }
@@ -76,8 +79,8 @@ func ProvideConfig() *config.Config {
 	panic(wire.Build(config.NewConfig))
 }
 
-func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.FirebaseAuth, xApiKeyAuthMiddleware *middleware.ServiceApiKeyAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
-	return HttpServer.NewServer(log, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
+func ProvideHttpServer(log *logrus.Logger, errorHandler *echo.HTTPErrorHandler, firebaseAuthMiddleware *middleware.FirebaseAuth, xApiKeyAuthMiddleware *middleware.ServiceApiKeyAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
+	return HttpServer.NewServer(log, errorHandler, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
 }
 
 func ProvideRpcServer(log *logrus.Logger, subscriptionUsecase RpcServer.SubscriptionUsecase) *RpcServer.Server {
@@ -173,4 +176,9 @@ func ProvidePubSubClient(cfg *config.Config) *PubSub.Client {
 
 func ProvideProjectEventsAdapter(pubSubClient *PubSub.Client, cfg *config.Config) *broker.ProjectEventsAdapter {
 	return broker.NewProjectEventsAdapter(pubSubClient, cfg.ProjectTopicId, cfg.ProjectSubName, cfg.ProjectCreateEndpoint, cfg.ProjectServiceApiKey)
+}
+
+func ProvideCustomErrorHandler(cfg *config.Config) *echo.HTTPErrorHandler {
+	errorHandler := CustomErrors.NewEchoErrorHandler(cfg.Mode)
+	return &errorHandler
 }

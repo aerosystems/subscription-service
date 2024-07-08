@@ -10,6 +10,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"firebase.google.com/go/auth"
+	"github.com/aerosystems/subscription-service/internal/common/custom_errors"
 	"github.com/aerosystems/subscription-service/internal/config"
 	"github.com/aerosystems/subscription-service/internal/infrastructure/adapters/broker"
 	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/fire"
@@ -26,6 +27,7 @@ import (
 	"github.com/aerosystems/subscription-service/pkg/logger"
 	"github.com/aerosystems/subscription-service/pkg/monobank"
 	"github.com/aerosystems/subscription-service/pkg/pubsub"
+	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
 
@@ -36,9 +38,10 @@ func InitApp() *App {
 	logger := ProvideLogger()
 	logrusLogger := ProvideLogrusLogger(logger)
 	config := ProvideConfig()
+	httpErrorHandler := ProvideCustomErrorHandler(config)
 	client := ProvideFirebaseAuthClient(config)
 	firebaseAuth := ProvideFirebaseAuthMiddleware(client)
-	xApiKeyAuth := ProvideXAPiKeyMiddleware(config)
+	serviceApiKeyAuth := ProvideXAPiKeyMiddleware(config)
 	baseHandler := ProvideBaseHandler(logrusLogger, config)
 	firestoreClient := ProvideFirestoreClient(config)
 	subscriptionRepo := ProvideSubscriptionRepo(firestoreClient)
@@ -53,7 +56,7 @@ func InitApp() *App {
 	v := ProvidePaymentMap(monobankStrategy)
 	paymentUsecase := ProvidePaymentUsecase(invoiceRepo, priceRepo, v)
 	paymentHandler := ProvidePaymentHandler(baseHandler, paymentUsecase)
-	server := ProvideHttpServer(logrusLogger, firebaseAuth, xApiKeyAuth, handler, paymentHandler)
+	server := ProvideHttpServer(logrusLogger, httpErrorHandler, firebaseAuth, serviceApiKeyAuth, handler, paymentHandler)
 	rpcServerServer := ProvideRpcServer(logrusLogger, subscriptionUsecase)
 	app := ProvideApp(logrusLogger, config, server, rpcServerServer)
 	return app
@@ -116,8 +119,8 @@ func ProvideInvoiceRepo(client *firestore.Client) *fire.InvoiceRepo {
 
 // wire.go:
 
-func ProvideHttpServer(log *logrus.Logger, firebaseAuthMiddleware *middleware.FirebaseAuth, xApiKeyAuthMiddleware *middleware.ServiceApiKeyAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
-	return HttpServer.NewServer(log, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
+func ProvideHttpServer(log *logrus.Logger, errorHandler *echo.HTTPErrorHandler, firebaseAuthMiddleware *middleware.FirebaseAuth, xApiKeyAuthMiddleware *middleware.ServiceApiKeyAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
+	return HttpServer.NewServer(log, errorHandler, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
 }
 
 func ProvideLogrusLogger(log *logger.Logger) *logrus.Logger {
@@ -179,4 +182,9 @@ func ProvidePubSubClient(cfg *config.Config) *PubSub.Client {
 
 func ProvideProjectEventsAdapter(pubSubClient *PubSub.Client, cfg *config.Config) *broker.ProjectEventsAdapter {
 	return broker.NewProjectEventsAdapter(pubSubClient, cfg.ProjectTopicId, cfg.ProjectSubName, cfg.ProjectCreateEndpoint, cfg.ProjectServiceApiKey)
+}
+
+func ProvideCustomErrorHandler(cfg *config.Config) *echo.HTTPErrorHandler {
+	errorHandler := CustomErrors.NewEchoErrorHandler(cfg.Mode)
+	return &errorHandler
 }
