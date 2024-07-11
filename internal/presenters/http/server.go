@@ -9,9 +9,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const webPort = 80
-
 type Server struct {
+	port                        int
 	log                         *logrus.Logger
 	echo                        *echo.Echo
 	firebaseAuthMiddleware      *middleware.FirebaseAuth
@@ -21,6 +20,7 @@ type Server struct {
 }
 
 func NewServer(
+	port int,
 	log *logrus.Logger,
 	errorHandler *echo.HTTPErrorHandler,
 	firebaseAuthMiddleware *middleware.FirebaseAuth,
@@ -29,6 +29,7 @@ func NewServer(
 	paymentHandler *payment.Handler,
 ) *Server {
 	server := &Server{
+		port:                        port,
 		log:                         log,
 		echo:                        echo.New(),
 		firebaseAuthMiddleware:      firebaseAuthMiddleware,
@@ -46,6 +47,5 @@ func (s *Server) Run() error {
 	s.setupMiddleware()
 	s.setupRoutes()
 	s.setupValidator()
-	s.log.Infof("starting HTTP server subscription-service on port %d\n", webPort)
-	return s.echo.Start(fmt.Sprintf(":%d", webPort))
+	return s.echo.Start(fmt.Sprintf(":%d", s.port))
 }

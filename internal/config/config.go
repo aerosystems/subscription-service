@@ -4,6 +4,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	defaultMode    = "prod"
+	defaultWebPort = 8080
+)
+
 type Config struct {
 	Mode                         string
 	WebPort                      int
@@ -21,9 +26,17 @@ type Config struct {
 
 func NewConfig() *Config {
 	viper.AutomaticEnv()
+	mode := viper.GetString("SBS_MODE")
+	if mode == "" {
+		mode = defaultMode
+	}
+	webPort := viper.GetInt("PORT")
+	if webPort == 0 {
+		webPort = defaultWebPort
+	}
 	return &Config{
-		Mode:                         viper.GetString("SBS_MODE"),
-		WebPort:                      viper.GetInt("PORT"),
+		Mode:                         mode,
+		WebPort:                      webPort,
 		GcpProjectId:                 viper.GetString("GCP_PROJECT_ID"),
 		GoogleApplicationCredentials: viper.GetString("GOOGLE_APPLICATION_CREDENTIALS"),
 		ApiKey:                       viper.GetString("SBS_API_KEY"),

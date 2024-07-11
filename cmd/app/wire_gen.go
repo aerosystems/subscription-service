@@ -56,7 +56,7 @@ func InitApp() *App {
 	v := ProvidePaymentMap(monobankStrategy)
 	paymentUsecase := ProvidePaymentUsecase(invoiceRepo, priceRepo, v)
 	paymentHandler := ProvidePaymentHandler(baseHandler, paymentUsecase)
-	server := ProvideHttpServer(logrusLogger, httpErrorHandler, firebaseAuth, serviceApiKeyAuth, handler, paymentHandler)
+	server := ProvideHttpServer(config, logrusLogger, httpErrorHandler, firebaseAuth, serviceApiKeyAuth, handler, paymentHandler)
 	rpcServerServer := ProvideRpcServer(logrusLogger, subscriptionUsecase)
 	app := ProvideApp(logrusLogger, config, server, rpcServerServer)
 	return app
@@ -119,8 +119,8 @@ func ProvideInvoiceRepo(client *firestore.Client) *fire.InvoiceRepo {
 
 // wire.go:
 
-func ProvideHttpServer(log *logrus.Logger, errorHandler *echo.HTTPErrorHandler, firebaseAuthMiddleware *middleware.FirebaseAuth, xApiKeyAuthMiddleware *middleware.ServiceApiKeyAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
-	return HttpServer.NewServer(log, errorHandler, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
+func ProvideHttpServer(cfg *config.Config, log *logrus.Logger, errorHandler *echo.HTTPErrorHandler, firebaseAuthMiddleware *middleware.FirebaseAuth, xApiKeyAuthMiddleware *middleware.ServiceApiKeyAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
+	return HttpServer.NewServer(cfg.WebPort, log, errorHandler, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
 }
 
 func ProvideLogrusLogger(log *logger.Logger) *logrus.Logger {
