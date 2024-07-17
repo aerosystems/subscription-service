@@ -1,0 +1,306 @@
+basePath: /
+definitions:
+  handlers.ErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  models.SubscriptionType:
+    type: object
+  payment.InvoiceRequest:
+    type: object
+  payment.InvoiceResponse:
+    properties:
+      paymentUrl:
+        example: https://api.monobank.ua
+        type: string
+    type: object
+  subscription.CreateFreeTrialRequestBody:
+    properties:
+      message:
+        properties:
+          data:
+            items:
+              type: integer
+            type: array
+        type: object
+      subscription:
+        type: string
+    type: object
+  subscription.CreateSubscriptionRequestBody:
+    properties:
+      customerUuid:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      subscriptionDuration:
+        example: ""
+        type: string
+      subscriptionType:
+        example: business
+        type: string
+    type: object
+  subscription.CreateSubscriptionResponseBody:
+    properties:
+      accessTime:
+        type: string
+      customerUuid:
+        type: string
+      subscriptionDuration:
+        type: string
+      subscriptionType:
+        type: string
+    type: object
+  subscription.GetSubscriptionResponse:
+    properties:
+      accessTime:
+        example: "2021-09-01T00:00:00Z"
+        type: string
+      duration:
+        example: 12m
+        type: string
+      name:
+        example: business
+        type: string
+    type: object
+host: gw.verifire.dev/subs
+info:
+  contact:
+    name: Artem Kostenko
+    url: https://github.com/aerosystems
+  description: A part of microservice infrastructure, who responsible for user subscriptions
+  title: Subscription Service
+  version: 1.0.0
+paths:
+  /v1/invoices/{payment_method}:
+    post:
+      consumes:
+      - application/json
+      description: Create invoice by payment method
+      parameters:
+      - description: payment method
+        enum:
+        - monobank
+        in: path
+        name: payment_method
+        required: true
+        type: string
+      - description: invoice
+        in: body
+        name: invoice
+        required: true
+        schema:
+          $ref: '#/definitions/payment.InvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/payment.InvoiceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - ServiceApiKeyAuth: []
+      summary: Create invoice
+      tags:
+      - invoices
+  /v1/prices:
+    get:
+      consumes:
+      - application/json
+      description: get prices for all available subscriptions, in cents
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              additionalProperties:
+                type: integer
+              type: object
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Get prices
+      tags:
+      - prices
+  /v1/subscriptions:
+    get:
+      consumes:
+      - application/json
+      description: get subscriptions by userUuid
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/subscription.GetSubscriptionResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - ServiceApiKeyAuth: []
+      summary: Get subscriptions
+      tags:
+      - subscriptions
+  /v1/subscriptions/{subscriptionId}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete subscription
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscriptionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete subscription
+      tags:
+      - subscriptions
+    put:
+      consumes:
+      - application/json
+      description: Update subscription
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscriptionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update subscription
+      tags:
+      - subscriptions
+  /v1/subscriptions/create:
+    post:
+      consumes:
+      - application/json
+      description: Create subscription
+      parameters:
+      - description: Create subscription
+        in: body
+        name: raw
+        required: true
+        schema:
+          $ref: '#/definitions/subscription.CreateSubscriptionRequestBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/subscription.CreateSubscriptionResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create subscription
+      tags:
+      - subscriptions
+  /v1/subscriptions/create-free-trial:
+    post:
+      consumes:
+      - application/json
+      description: Create free trial
+      parameters:
+      - description: Create free trial
+        in: body
+        name: raw
+        required: true
+        schema:
+          $ref: '#/definitions/subscription.CreateFreeTrialRequestBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/subscription.CreateSubscriptionResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create free trial
+      tags:
+      - subscriptions
+schemes:
+- https
+securityDefinitions:
+  BearerAuth:
+    description: Should contain Access JWT Token, with the Bearer started
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
