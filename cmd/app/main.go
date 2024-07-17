@@ -6,7 +6,7 @@ import (
 )
 
 // @title Subscription Service
-// @version 2.0.0
+// @version 1.0.0
 // @description A part of microservice infrastructure, who responsible for user subscriptions
 
 // @contact.name Artem Kostenko

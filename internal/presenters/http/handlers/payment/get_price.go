@@ -27,8 +27,8 @@ func ModelToPriceResponse(prices map[models.SubscriptionType]map[models.Subscrip
 // @Tags prices
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} Response{data=map[string]map[string]int}
-// @Failure 500 {object} Response
+// @Success 200 {object} map[string]map[string]int
+// @Failure 500 {object} handlers.ErrorResponse
 // @Router /v1/prices [get]
 func (ph Handler) GetPrices(c echo.Context) error {
 	return c.JSON(http.StatusOK, ModelToPriceResponse(ph.paymentUsecase.GetPrices()))

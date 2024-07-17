@@ -30,9 +30,9 @@ func ModelToSubscriptionResponse(subscription *models.Subscription) *GetSubscrip
 // @Produce  json
 // @Security ServiceApiKeyAuth
 // @Success 200 {object} GetSubscriptionResponse
-// @Failure 401 {object} echo.HTTPError
-// @Failure 403 {object} echo.HTTPError
-// @Failure 500 {object} echo.HTTPError
+// @Failure 401 {object} handlers.ErrorResponse
+// @Failure 403 {object} handlers.ErrorResponse
+// @Failure 500 {object} handlers.ErrorResponse
 // @Router /v1/subscriptions [get]
 func (sh Handler) GetSubscriptions(c echo.Context) error {
 	accessTokenClaims := c.Get("accessTokenClaims").(*middleware.AccessTokenClaims)

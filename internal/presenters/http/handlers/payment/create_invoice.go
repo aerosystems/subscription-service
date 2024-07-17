@@ -27,11 +27,11 @@ type InvoiceResponse struct {
 // @Param payment_method path string true "payment method" Enums(monobank)
 // @Param invoice body InvoiceRequest true "invoice"
 // @Security ServiceApiKeyAuth
-// @Success 201 {object} Response{data=InvoiceResponse}
-// @Failure 400 {object} Response
-// @Failure 401 {object} Response
-// @Failure 422 {object} Response
-// @Failure 500 {object} Response
+// @Success 201 {object} InvoiceResponse
+// @Failure 400 {object} handlers.ErrorResponse
+// @Failure 401 {object} handlers.ErrorResponse
+// @Failure 422 {object} handlers.ErrorResponse
+// @Failure 500 {object} handlers.ErrorResponse
 // @Router /v1/invoices/{payment_method} [post]
 func (ph Handler) CreateInvoice(c echo.Context) error {
 	accessTokenClaims := c.Get("accessTokenClaims").(*middleware.AccessTokenClaims)

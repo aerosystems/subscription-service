@@ -42,10 +42,10 @@ func ModelToCreateSubscriptionResponse(subscription *models.Subscription) *Creat
 // @Security BearerAuth
 // @Param raw body CreateSubscriptionRequestBody true "Create subscription"
 // @Success 201 {object} CreateSubscriptionResponseBody
-// @Failure 400 {object} echo.HTTPError
-// @Failure 401 {object} echo.HTTPError
-// @Failure 403 {object} echo.HTTPError
-// @Failure 500 {object} echo.HTTPError
+// @Failure 400 {object} handlers.ErrorResponse
+// @Failure 401 {object} handlers.ErrorResponse
+// @Failure 403 {object} handlers.ErrorResponse
+// @Failure 500 {object} handlers.ErrorResponse
 // @Router /v1/subscriptions/create [post]
 func (sh Handler) CreateSubscription(c echo.Context) error {
 	var requestPayload CreateSubscriptionRequest

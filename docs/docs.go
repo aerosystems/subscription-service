@@ -13,10 +13,6 @@ const docTemplate = `{
             "name": "Artem Kostenko",
             "url": "https://github.com/aerosystems"
         },
-        "license": {
-            "name": "Apache 2.0",
-            "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
-        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -26,7 +22,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ServiceApiKeyAuth": []
                     }
                 ],
                 "description": "Create invoice by payment method",
@@ -57,7 +53,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.InvoiceRequest"
+                            "$ref": "#/definitions/payment.InvoiceRequest"
                         }
                     }
                 ],
@@ -65,43 +61,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/handlers.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handlers.InvoiceResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/payment.InvoiceResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handlers.Response"
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handlers.Response"
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/handlers.Response"
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.Response"
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -124,31 +108,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/handlers.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "object",
-                                                "additionalProperties": {
-                                                    "type": "integer"
-                                                }
-                                            }
-                                        }
-                                    }
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": "integer"
                                 }
-                            ]
+                            }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.Response"
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -158,7 +130,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ServiceApiKeyAuth": []
                     }
                 ],
                 "description": "get subscriptions by userUuid",
@@ -176,31 +148,223 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/handlers.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.Subscription"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/subscription.GetSubscriptionResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handlers.Response"
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.Response"
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/subscriptions/create": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Create subscription",
+                "parameters": [
+                    {
+                        "description": "Create subscription",
+                        "name": "raw",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/subscription.CreateSubscriptionRequestBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/subscription.CreateSubscriptionResponseBody"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/subscriptions/create-free-trial": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create free trial",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Create free trial",
+                "parameters": [
+                    {
+                        "description": "Create free trial",
+                        "name": "raw",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/subscription.CreateFreeTrialRequestBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/subscription.CreateSubscriptionResponseBody"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/subscriptions/{subscriptionId}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Update subscription",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Subscription ID",
+                        "name": "subscriptionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Delete subscription",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Subscription ID",
+                        "name": "subscriptionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -208,10 +372,21 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "handlers.InvoiceRequest": {
+        "handlers.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.SubscriptionType": {
             "type": "object"
         },
-        "handlers.InvoiceResponse": {
+        "payment.InvoiceRequest": {
+            "type": "object"
+        },
+        "payment.InvoiceResponse": {
             "type": "object",
             "properties": {
                 "paymentUrl": {
@@ -220,41 +395,73 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.Response": {
+        "subscription.CreateFreeTrialRequestBody": {
             "type": "object",
             "properties": {
-                "data": {},
                 "message": {
+                    "type": "object",
+                    "properties": {
+                        "data": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                },
+                "subscription": {
                     "type": "string"
                 }
             }
         },
-        "models.SubscriptionDuration": {
-            "type": "object"
+        "subscription.CreateSubscriptionRequestBody": {
+            "type": "object",
+            "properties": {
+                "customerUuid": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "subscriptionDuration": {
+                    "type": "string",
+                    "example": ""
+                },
+                "subscriptionType": {
+                    "type": "string",
+                    "example": "business"
+                }
+            }
         },
-        "models.SubscriptionType": {
-            "type": "object"
-        },
-        "models.Subscription": {
+        "subscription.CreateSubscriptionResponseBody": {
             "type": "object",
             "properties": {
                 "accessTime": {
                     "type": "string"
                 },
-                "createdAt": {
+                "customerUuid": {
                     "type": "string"
+                },
+                "subscriptionDuration": {
+                    "type": "string"
+                },
+                "subscriptionType": {
+                    "type": "string"
+                }
+            }
+        },
+        "subscription.GetSubscriptionResponse": {
+            "type": "object",
+            "properties": {
+                "accessTime": {
+                    "type": "string",
+                    "example": "2021-09-01T00:00:00Z"
                 },
                 "duration": {
-                    "$ref": "#/definitions/models.SubscriptionDuration"
+                    "type": "string",
+                    "example": "12m"
                 },
-                "kind": {
-                    "$ref": "#/definitions/models.SubscriptionType"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "userUuid": {
-                    "type": "string"
+                "name": {
+                    "type": "string",
+                    "example": "business"
                 }
             }
         }
@@ -271,7 +478,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.0.0",
+	Version:          "1.0.0",
 	Host:             "gw.verifire.dev/subs",
 	BasePath:         "/",
 	Schemes:          []string{"https"},
