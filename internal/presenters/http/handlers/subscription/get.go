@@ -35,8 +35,11 @@ func ModelToSubscriptionResponse(subscription *models.Subscription) *GetSubscrip
 // @Failure 500 {object} handlers.ErrorResponse
 // @Router /v1/subscriptions [get]
 func (sh Handler) GetSubscriptions(c echo.Context) error {
-	accessTokenClaims := c.Get("accessTokenClaims").(*middleware.AccessTokenClaims)
-	subscription, err := sh.subscriptionUsecase.GetSubscription(uuid.MustParse(accessTokenClaims.UserUuid))
+	user, err := middleware.GetUserFromContext(c.Request().Context())
+	if err != nil {
+		return err
+	}
+	subscription, err := sh.subscriptionUsecase.GetSubscription(uuid.MustParse(user.Uuid))
 	if err != nil {
 		return err
 	}

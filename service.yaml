@@ -1,0 +1,80 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: "%APP_NAME%"
+  labels:
+    cloud.googleapis.com/location: europe-west1
+  annotations:
+    run.googleapis.com/client-name: cloud-console
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+spec:
+  template:
+    metadata:
+      labels:
+        run.googleapis.com/startupProbeType: Default
+      annotations:
+        autoscaling.knative.dev/maxScale: '100'
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/client-name: cloud-console
+        run.googleapis.com/startup-cpu-boost: 'true'
+    spec:
+      containerConcurrency: 1000
+      timeoutSeconds: 300
+      serviceAccountName: 244108678816-compute@developer.gserviceaccount.com
+      containers:
+        - name: subscription-service
+          image: "%IMAGE%"
+          ports:
+            - name: http1
+              containerPort: 8080
+          env:
+            - name: SBS_MODE
+              value: dev
+            - name: GCP_PROJECT_ID
+              value: verifire-60d1b
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /app/secret/verifire-60d1b-3a7b22c9842d
+            - name: SBS_MONOBANK_REDIRECT_URL
+              value: https://verifire.dev/payment/success
+            - name: SBS_MONOBANK_WEBHOOK_URL
+              value: https://gw.verifire.dev/subs/v1/webhook/monobank
+            - name: SBS_PROJECT_CREATE_ENDPOINT
+              value: https://test.com
+            - name: SBS_PROJECT_TOPIC_ID
+              value: project-topic
+            - name: SBS_PROJECT_SUB_NAME
+              value: project-sub
+            - name: SBS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: '1'
+                  name: sbs-api-key
+            - name: SBS_MONOBANK_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: '1'
+                  name: sbs-monobank-token
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+          volumeMounts:
+            - name: verifire-60d1b-3a7b22c9842d
+              mountPath: /app/secret
+          startupProbe:
+            timeoutSeconds: 240
+            periodSeconds: 240
+            failureThreshold: 1
+            tcpSocket:
+              port: 8080
+      volumes:
+        - name: verifire-60d1b-3a7b22c9842d
+          secret:
+            secretName: verifire-60d1b-3a7b22c9842d
+            items:
+              - key: latest
+                path: verifire-60d1b-3a7b22c9842d
+  traffic:
+    - percent: 100
+      latestRevision: true

@@ -34,7 +34,10 @@ type InvoiceResponse struct {
 // @Failure 500 {object} handlers.ErrorResponse
 // @Router /v1/invoices/{payment_method} [post]
 func (ph Handler) CreateInvoice(c echo.Context) error {
-	accessTokenClaims := c.Get("accessTokenClaims").(*middleware.AccessTokenClaims)
+	user, err := middleware.GetUserFromContext(c.Request().Context())
+	if err != nil {
+		return err
+	}
 	method := models.NewPaymentMethod(c.Param("payment_method"))
 	if err := ph.paymentUsecase.SetPaymentMethod(method); err != nil {
 		return err
@@ -43,7 +46,7 @@ func (ph Handler) CreateInvoice(c echo.Context) error {
 	if err := c.Bind(&requestBody); err != nil {
 		return CustomErrors.ErrInvalidRequestBody
 	}
-	paymentUrl, err := ph.paymentUsecase.GetPaymentUrl(uuid.MustParse(accessTokenClaims.UserUuid), requestBody.SubscriptionType, requestBody.SubscriptionDuration)
+	paymentUrl, err := ph.paymentUsecase.GetPaymentUrl(uuid.MustParse(user.Uuid), requestBody.SubscriptionType, requestBody.SubscriptionDuration)
 	if err != nil {
 		return err
 	}

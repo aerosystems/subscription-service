@@ -25,14 +25,14 @@ func NewInvoiceRepo(client *firestore.Client) *InvoiceRepo {
 }
 
 type InvoiceFire struct {
-	Amount             int       `firestore:"amount"`
-	CustomerUuid       string    `firestore:"customer_uuid"`
-	InvoiceUuid        string    `firestore:"invoice_uuid"`
-	PaymentMethod      string    `firestore:"payment_method"`
-	AcquiringInvoiceId string    `firestore:"acquiring_invoice_id"`
-	PaymentStatus      string    `firestore:"payment_status"`
-	CreatedAt          time.Time `firestore:"created_at"`
-	UpdatedAt          time.Time `firestore:"updated_at"`
+	Amount             int       `FirestoreRepo:"amount"`
+	CustomerUuid       string    `FirestoreRepo:"customer_uuid"`
+	InvoiceUuid        string    `FirestoreRepo:"invoice_uuid"`
+	PaymentMethod      string    `FirestoreRepo:"payment_method"`
+	AcquiringInvoiceId string    `FirestoreRepo:"acquiring_invoice_id"`
+	PaymentStatus      string    `FirestoreRepo:"payment_status"`
+	CreatedAt          time.Time `FirestoreRepo:"created_at"`
+	UpdatedAt          time.Time `FirestoreRepo:"updated_at"`
 }
 
 func (i *InvoiceFire) ToModel() (models.Invoice, error) {
