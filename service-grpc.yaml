@@ -69,7 +69,7 @@ spec:
             periodSeconds: 240
             failureThreshold: 1
             tcpSocket:
-              port: 8080
+              port: 50051
       volumes:
         - name: verifire-60d1b-3a7b22c9842d
           secret:
