@@ -7,18 +7,18 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"firebase.google.com/go/auth"
+	"github.com/aerosystems/subscription-service/internal/common/config"
 	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
-	"github.com/aerosystems/subscription-service/internal/config"
 	"github.com/aerosystems/subscription-service/internal/infrastructure/adapters/broker"
 	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/fire"
 	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/memory"
 	"github.com/aerosystems/subscription-service/internal/models"
+	GRPCServer "github.com/aerosystems/subscription-service/internal/presenters/grpc"
 	HttpServer "github.com/aerosystems/subscription-service/internal/presenters/http"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers/payment"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers/subscription"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/middleware"
-	RpcServer "github.com/aerosystems/subscription-service/internal/presenters/rpc"
 	"github.com/aerosystems/subscription-service/internal/usecases"
 	"github.com/aerosystems/subscription-service/pkg/firebase"
 	"github.com/aerosystems/subscription-service/pkg/logger"
@@ -32,7 +32,7 @@ import (
 //go:generate wire
 func InitApp() *App {
 	panic(wire.Build(
-		wire.Bind(new(RpcServer.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
+		wire.Bind(new(GRPCServer.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
 		wire.Bind(new(handlers.PaymentUsecase), new(*usecases.PaymentUsecase)),
 		wire.Bind(new(handlers.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
 		wire.Bind(new(usecases.SubscriptionRepository), new(*fire.SubscriptionRepo)),
@@ -43,7 +43,8 @@ func InitApp() *App {
 		ProvideLogger,
 		ProvideConfig,
 		ProvideHttpServer,
-		ProvideRpcServer,
+		ProvideGRPCServer,
+		ProvideGRPCSubscriptionHandler,
 		ProvideLogrusLogger,
 		ProvideBaseHandler,
 		ProvidePaymentHandler,
@@ -67,7 +68,7 @@ func InitApp() *App {
 	)
 }
 
-func ProvideApp(log *logrus.Logger, cfg *config.Config, httpServer *HttpServer.Server, rpcServer *RpcServer.Server) *App {
+func ProvideApp(log *logrus.Logger, cfg *config.Config, httpServer *HttpServer.Server, gpcServer *GRPCServer.Server) *App {
 	panic(wire.Build(NewApp))
 }
 
@@ -80,11 +81,15 @@ func ProvideConfig() *config.Config {
 }
 
 func ProvideHttpServer(cfg *config.Config, log *logrus.Logger, errorHandler *echo.HTTPErrorHandler, firebaseAuthMiddleware *middleware.FirebaseAuth, xApiKeyAuthMiddleware *middleware.ServiceApiKeyAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
-	return HttpServer.NewServer(cfg.WebPort, log, errorHandler, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
+	return HttpServer.NewServer(cfg.Port, log, errorHandler, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
 }
 
-func ProvideRpcServer(log *logrus.Logger, subscriptionUsecase RpcServer.SubscriptionUsecase) *RpcServer.Server {
-	panic(wire.Build(RpcServer.NewServer))
+func ProvideGRPCServer(cfg *config.Config, log *logrus.Logger, grpcSubscriptionHandler *GRPCServer.SubscriptionHandler) *GRPCServer.Server {
+	return GRPCServer.NewGRPCServer(cfg.Port, log, grpcSubscriptionHandler)
+}
+
+func ProvideGRPCSubscriptionHandler(subscriptionUsecase GRPCServer.SubscriptionUsecase) *GRPCServer.SubscriptionHandler {
+	panic(wire.Build(GRPCServer.NewSubscriptionHandler))
 }
 
 func ProvideLogrusLogger(log *logger.Logger) *logrus.Logger {

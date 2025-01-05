@@ -26,11 +26,13 @@ spec:
         - name: subscription-service
           image: "%IMAGE%"
           ports:
-            - name: http1
-              containerPort: 8080
+            - name: h2c
+              containerPort: 50051
           env:
-            - name: SBS_MODE
+            - name: MODE
               value: dev
+            - name: PROTO
+              value: grpc
             - name: GCP_PROJECT_ID
               value: verifire-60d1b
             - name: GOOGLE_APPLICATION_CREDENTIALS

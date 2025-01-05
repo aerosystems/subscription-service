@@ -10,18 +10,18 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"firebase.google.com/go/auth"
+	"github.com/aerosystems/subscription-service/internal/common/config"
 	"github.com/aerosystems/subscription-service/internal/common/custom_errors"
-	"github.com/aerosystems/subscription-service/internal/config"
 	"github.com/aerosystems/subscription-service/internal/infrastructure/adapters/broker"
 	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/fire"
 	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/memory"
 	"github.com/aerosystems/subscription-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/presenters/grpc"
 	"github.com/aerosystems/subscription-service/internal/presenters/http"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers/payment"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers/subscription"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/middleware"
-	"github.com/aerosystems/subscription-service/internal/presenters/rpc"
 	"github.com/aerosystems/subscription-service/internal/usecases"
 	"github.com/aerosystems/subscription-service/pkg/firebase"
 	"github.com/aerosystems/subscription-service/pkg/logger"
@@ -57,13 +57,14 @@ func InitApp() *App {
 	paymentUsecase := ProvidePaymentUsecase(invoiceRepo, priceRepo, v)
 	paymentHandler := ProvidePaymentHandler(baseHandler, paymentUsecase)
 	server := ProvideHttpServer(config, logrusLogger, httpErrorHandler, firebaseAuth, serviceApiKeyAuth, handler, paymentHandler)
-	rpcServerServer := ProvideRpcServer(logrusLogger, subscriptionUsecase)
-	app := ProvideApp(logrusLogger, config, server, rpcServerServer)
+	subscriptionHandler := ProvideGRPCSubscriptionHandler(subscriptionUsecase)
+	grpcServerServer := ProvideGRPCServer(config, logrusLogger, subscriptionHandler)
+	app := ProvideApp(logrusLogger, config, server, grpcServerServer)
 	return app
 }
 
-func ProvideApp(log *logrus.Logger, cfg *config.Config, httpServer *HttpServer.Server, rpcServer *RpcServer.Server) *App {
-	app := NewApp(log, cfg, httpServer, rpcServer)
+func ProvideApp(log *logrus.Logger, cfg *config.Config, httpServer *HttpServer.Server, gpcServer *GRPCServer.Server) *App {
+	app := NewApp(log, cfg, httpServer, gpcServer)
 	return app
 }
 
@@ -77,9 +78,9 @@ func ProvideConfig() *config.Config {
 	return configConfig
 }
 
-func ProvideRpcServer(log *logrus.Logger, subscriptionUsecase RpcServer.SubscriptionUsecase) *RpcServer.Server {
-	server := RpcServer.NewServer(log, subscriptionUsecase)
-	return server
+func ProvideGRPCSubscriptionHandler(subscriptionUsecase GRPCServer.SubscriptionUsecase) *GRPCServer.SubscriptionHandler {
+	subscriptionHandler := GRPCServer.NewSubscriptionHandler(subscriptionUsecase)
+	return subscriptionHandler
 }
 
 func ProvidePaymentHandler(baseHandler *handlers.BaseHandler, paymentUsecase handlers.PaymentUsecase) *payment.Handler {
@@ -120,7 +121,11 @@ func ProvideInvoiceRepo(client *firestore.Client) *fire.InvoiceRepo {
 // wire.go:
 
 func ProvideHttpServer(cfg *config.Config, log *logrus.Logger, errorHandler *echo.HTTPErrorHandler, firebaseAuthMiddleware *middleware.FirebaseAuth, xApiKeyAuthMiddleware *middleware.ServiceApiKeyAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
-	return HttpServer.NewServer(cfg.WebPort, log, errorHandler, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
+	return HttpServer.NewServer(cfg.Port, log, errorHandler, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
+}
+
+func ProvideGRPCServer(cfg *config.Config, log *logrus.Logger, grpcSubscriptionHandler *GRPCServer.SubscriptionHandler) *GRPCServer.Server {
+	return GRPCServer.NewGRPCServer(cfg.Port, log, grpcSubscriptionHandler)
 }
 
 func ProvideLogrusLogger(log *logger.Logger) *logrus.Logger {
