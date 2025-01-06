@@ -64,9 +64,6 @@ func (ss SubscriptionUsecase) CreateFreeTrial(customerUuidStr string) (*models.S
 	if err := ss.subsRepo.Create(ctx, sub); err != nil {
 		return nil, fmt.Errorf("could not create subscription: %w", err)
 	}
-	if err := ss.projectAdapter.PublishCreateProjectEvent(sub.Uuid, sub.Type, sub.AccessTime); err != nil {
-		return nil, fmt.Errorf("could not publish create project event: %w", err)
-	}
 	return sub, nil
 }
 
