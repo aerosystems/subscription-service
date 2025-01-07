@@ -10,14 +10,12 @@ import (
 )
 
 type SubscriptionUsecase struct {
-	subsRepo       SubscriptionRepository
-	projectAdapter ProjectAdapter
+	subsRepo SubscriptionRepository
 }
 
-func NewSubscriptionUsecase(subsRepo SubscriptionRepository, projectAdapter ProjectAdapter) *SubscriptionUsecase {
+func NewSubscriptionUsecase(subsRepo SubscriptionRepository) *SubscriptionUsecase {
 	return &SubscriptionUsecase{
-		subsRepo:       subsRepo,
-		projectAdapter: projectAdapter,
+		subsRepo: subsRepo,
 	}
 }
 
@@ -47,8 +45,7 @@ func (ss SubscriptionUsecase) CreateSubscription(customerUuidStr, subscriptionTy
 		return nil, CustomErrors.ErrInvalidSubscriptionDuration
 	}
 	sub := NewSubscription(customerUuid, subscriptionType, subscriptionDuration)
-	ctx := context.Background()
-	if err := ss.subsRepo.Create(ctx, sub); err != nil {
+	if err := ss.subsRepo.Create(context.TODO(), sub); err != nil {
 		return nil, fmt.Errorf("could not create subscription: %w", err)
 	}
 	return sub, nil
@@ -60,24 +57,16 @@ func (ss SubscriptionUsecase) CreateFreeTrial(customerUuidStr string) (*models.S
 		return nil, CustomErrors.ErrInvalidCustomerUuid
 	}
 	sub := NewSubscription(customerUuid, models.TrialSubscriptionType, models.OneWeekSubscriptionDuration)
-	ctx := context.Background()
-	if err := ss.subsRepo.Create(ctx, sub); err != nil {
+	if err := ss.subsRepo.Create(context.TODO(), sub); err != nil {
 		return nil, fmt.Errorf("could not create subscription: %w", err)
 	}
 	return sub, nil
 }
 
 func (ss SubscriptionUsecase) GetSubscription(customerUuid uuid.UUID) (*models.Subscription, error) {
-	ctx := context.Background()
-	return ss.subsRepo.GetByCustomerUuid(ctx, customerUuid)
+	return ss.subsRepo.GetByCustomerUuid(context.TODO(), customerUuid)
 }
 
 func (ss SubscriptionUsecase) DeleteSubscription(subscriptionUUID uuid.UUID) error {
-	ctx := context.Background()
-	sub, err := ss.subsRepo.GetByCustomerUuid(ctx, subscriptionUUID)
-	if err != nil {
-		return err
-	}
-	ctx = context.Background()
-	return ss.subsRepo.Delete(ctx, sub)
+	return ss.subsRepo.Delete(context.TODO(), subscriptionUUID)
 }

@@ -7,11 +7,9 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"firebase.google.com/go/auth"
+	"github.com/aerosystems/subscription-service/internal/adapters"
 	"github.com/aerosystems/subscription-service/internal/common/config"
 	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
-	"github.com/aerosystems/subscription-service/internal/infrastructure/adapters/broker"
-	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/fire"
-	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/memory"
 	"github.com/aerosystems/subscription-service/internal/models"
 	GRPCServer "github.com/aerosystems/subscription-service/internal/presenters/grpc"
 	HttpServer "github.com/aerosystems/subscription-service/internal/presenters/http"
@@ -23,7 +21,6 @@ import (
 	"github.com/aerosystems/subscription-service/pkg/firebase"
 	"github.com/aerosystems/subscription-service/pkg/logger"
 	"github.com/aerosystems/subscription-service/pkg/monobank"
-	"github.com/aerosystems/subscription-service/pkg/pubsub"
 	"github.com/google/wire"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
@@ -35,10 +32,9 @@ func InitApp() *App {
 		wire.Bind(new(GRPCServer.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
 		wire.Bind(new(handlers.PaymentUsecase), new(*usecases.PaymentUsecase)),
 		wire.Bind(new(handlers.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
-		wire.Bind(new(usecases.SubscriptionRepository), new(*fire.SubscriptionRepo)),
-		wire.Bind(new(usecases.InvoiceRepository), new(*fire.InvoiceRepo)),
-		wire.Bind(new(usecases.PriceRepository), new(*memory.PriceRepo)),
-		wire.Bind(new(usecases.ProjectAdapter), new(*broker.ProjectEventsAdapter)),
+		wire.Bind(new(usecases.SubscriptionRepository), new(*adapters.SubscriptionRepo)),
+		wire.Bind(new(usecases.InvoiceRepository), new(*adapters.InvoiceRepo)),
+		wire.Bind(new(usecases.PriceRepository), new(*adapters.PriceRepo)),
 		ProvideApp,
 		ProvideLogger,
 		ProvideConfig,
@@ -61,8 +57,6 @@ func InitApp() *App {
 		ProvideFirebaseAuthClient,
 		ProvideInvoiceRepo,
 		ProvideXAPiKeyMiddleware,
-		ProvidePubSubClient,
-		ProvideProjectEventsAdapter,
 		ProvideCustomErrorHandler,
 	),
 	)
@@ -126,12 +120,12 @@ func ProvideMonobankAcquiring(cfg *config.Config) *monobank.Acquiring {
 	return monobank.NewAcquiring(cfg.MonobankToken)
 }
 
-func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository, projectAdapter usecases.ProjectAdapter) *usecases.SubscriptionUsecase {
+func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository) *usecases.SubscriptionUsecase {
 	panic(wire.Build(usecases.NewSubscriptionUsecase))
 }
 
-func ProvidePriceRepo() *memory.PriceRepo {
-	panic(wire.Build(memory.NewPriceRepo))
+func ProvidePriceRepo() *adapters.PriceRepo {
+	panic(wire.Build(adapters.NewPriceRepo))
 }
 
 func ProvideFirestoreClient(cfg *config.Config) *firestore.Client {
@@ -143,12 +137,12 @@ func ProvideFirestoreClient(cfg *config.Config) *firestore.Client {
 	return client
 }
 
-func ProvideSubscriptionRepo(client *firestore.Client) *fire.SubscriptionRepo {
-	panic(wire.Build(fire.NewSubscriptionRepo))
+func ProvideSubscriptionRepo(client *firestore.Client) *adapters.SubscriptionRepo {
+	panic(wire.Build(adapters.NewSubscriptionRepo))
 }
 
-func ProvideInvoiceRepo(client *firestore.Client) *fire.InvoiceRepo {
-	panic(wire.Build(fire.NewInvoiceRepo))
+func ProvideInvoiceRepo(client *firestore.Client) *adapters.InvoiceRepo {
+	panic(wire.Build(adapters.NewInvoiceRepo))
 }
 
 func ProvideFirebaseAuthMiddleware(client *auth.Client) *middleware.FirebaseAuth {
@@ -169,18 +163,6 @@ func ProvideFirebaseAuthClient(cfg *config.Config) *auth.Client {
 		panic(err)
 	}
 	return app.Client
-}
-
-func ProvidePubSubClient(cfg *config.Config) *PubSub.Client {
-	client, err := PubSub.NewClientWithAuth(cfg.GoogleApplicationCredentials)
-	if err != nil {
-		panic(err)
-	}
-	return client
-}
-
-func ProvideProjectEventsAdapter(pubSubClient *PubSub.Client, cfg *config.Config) *broker.ProjectEventsAdapter {
-	return broker.NewProjectEventsAdapter(pubSubClient, cfg.ProjectTopicId, cfg.ProjectSubName, cfg.ProjectCreateEndpoint, cfg.ProjectServiceApiKey)
 }
 
 func ProvideCustomErrorHandler(cfg *config.Config) *echo.HTTPErrorHandler {

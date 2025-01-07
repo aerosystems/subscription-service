@@ -10,11 +10,9 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"firebase.google.com/go/auth"
+	"github.com/aerosystems/subscription-service/internal/adapters"
 	"github.com/aerosystems/subscription-service/internal/common/config"
 	"github.com/aerosystems/subscription-service/internal/common/custom_errors"
-	"github.com/aerosystems/subscription-service/internal/infrastructure/adapters/broker"
-	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/fire"
-	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/memory"
 	"github.com/aerosystems/subscription-service/internal/models"
 	"github.com/aerosystems/subscription-service/internal/presenters/grpc"
 	"github.com/aerosystems/subscription-service/internal/presenters/http"
@@ -26,7 +24,6 @@ import (
 	"github.com/aerosystems/subscription-service/pkg/firebase"
 	"github.com/aerosystems/subscription-service/pkg/logger"
 	"github.com/aerosystems/subscription-service/pkg/monobank"
-	"github.com/aerosystems/subscription-service/pkg/pubsub"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
@@ -45,9 +42,7 @@ func InitApp() *App {
 	baseHandler := ProvideBaseHandler(logrusLogger, config)
 	firestoreClient := ProvideFirestoreClient(config)
 	subscriptionRepo := ProvideSubscriptionRepo(firestoreClient)
-	pubSubClient := ProvidePubSubClient(config)
-	projectEventsAdapter := ProvideProjectEventsAdapter(pubSubClient, config)
-	subscriptionUsecase := ProvideSubscriptionUsecase(subscriptionRepo, projectEventsAdapter)
+	subscriptionUsecase := ProvideSubscriptionUsecase(subscriptionRepo)
 	handler := ProvideSubscriptionHandler(baseHandler, subscriptionUsecase)
 	invoiceRepo := ProvideInvoiceRepo(firestoreClient)
 	priceRepo := ProvidePriceRepo()
@@ -98,23 +93,23 @@ func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo use
 	return paymentUsecase
 }
 
-func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository, projectAdapter usecases.ProjectAdapter) *usecases.SubscriptionUsecase {
-	subscriptionUsecase := usecases.NewSubscriptionUsecase(subscriptionRepo, projectAdapter)
+func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository) *usecases.SubscriptionUsecase {
+	subscriptionUsecase := usecases.NewSubscriptionUsecase(subscriptionRepo)
 	return subscriptionUsecase
 }
 
-func ProvidePriceRepo() *memory.PriceRepo {
-	priceRepo := memory.NewPriceRepo()
+func ProvidePriceRepo() *adapters.PriceRepo {
+	priceRepo := adapters.NewPriceRepo()
 	return priceRepo
 }
 
-func ProvideSubscriptionRepo(client *firestore.Client) *fire.SubscriptionRepo {
-	subscriptionRepo := fire.NewSubscriptionRepo(client)
+func ProvideSubscriptionRepo(client *firestore.Client) *adapters.SubscriptionRepo {
+	subscriptionRepo := adapters.NewSubscriptionRepo(client)
 	return subscriptionRepo
 }
 
-func ProvideInvoiceRepo(client *firestore.Client) *fire.InvoiceRepo {
-	invoiceRepo := fire.NewInvoiceRepo(client)
+func ProvideInvoiceRepo(client *firestore.Client) *adapters.InvoiceRepo {
+	invoiceRepo := adapters.NewInvoiceRepo(client)
 	return invoiceRepo
 }
 
@@ -175,18 +170,6 @@ func ProvideFirebaseAuthClient(cfg *config.Config) *auth.Client {
 		panic(err)
 	}
 	return app.Client
-}
-
-func ProvidePubSubClient(cfg *config.Config) *PubSub.Client {
-	client, err := PubSub.NewClientWithAuth(cfg.GoogleApplicationCredentials)
-	if err != nil {
-		panic(err)
-	}
-	return client
-}
-
-func ProvideProjectEventsAdapter(pubSubClient *PubSub.Client, cfg *config.Config) *broker.ProjectEventsAdapter {
-	return broker.NewProjectEventsAdapter(pubSubClient, cfg.ProjectTopicId, cfg.ProjectSubName, cfg.ProjectCreateEndpoint, cfg.ProjectServiceApiKey)
 }
 
 func ProvideCustomErrorHandler(cfg *config.Config) *echo.HTTPErrorHandler {
