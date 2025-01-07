@@ -21,7 +21,7 @@ import (
 	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers/subscription"
 	"github.com/aerosystems/subscription-service/internal/presenters/http/middleware"
 	"github.com/aerosystems/subscription-service/internal/usecases"
-	"github.com/aerosystems/subscription-service/pkg/firebase"
+	"github.com/aerosystems/subscription-service/pkg/gcp"
 	"github.com/aerosystems/subscription-service/pkg/logger"
 	"github.com/aerosystems/subscription-service/pkg/monobank"
 	"github.com/labstack/echo/v4"
@@ -165,7 +165,7 @@ func ProvideXAPiKeyMiddleware(cfg *config.Config) *middleware.ServiceApiKeyAuth 
 }
 
 func ProvideFirebaseAuthClient(cfg *config.Config) *auth.Client {
-	app, err := firebaseApp.NewApp(cfg.GcpProjectId, cfg.GoogleApplicationCredentials)
+	app, err := gcp.NewFirebaseApp(cfg.GcpProjectId, cfg.GoogleApplicationCredentials)
 	if err != nil {
 		panic(err)
 	}
