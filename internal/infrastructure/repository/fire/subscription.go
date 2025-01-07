@@ -10,10 +10,6 @@ import (
 	"time"
 )
 
-const (
-	defaultTimeout = 2 * time.Second
-)
-
 type SubscriptionRepo struct {
 	client *firestore.Client
 }
@@ -59,10 +55,8 @@ func ModelToSubscriptionFire(subscription *models.Subscription) *SubscriptionFir
 }
 
 func (r *SubscriptionRepo) GetByCustomerUuid(ctx context.Context, customerUuid uuid.UUID) (*models.Subscription, error) {
-	c, cancel := context.WithTimeout(ctx, defaultTimeout)
-	defer cancel()
 	var subscription SubscriptionFire
-	iter := r.client.Collection("subscriptions").Where("customer_uuid", "==", customerUuid.String()).Documents(c)
+	iter := r.client.Collection("subscriptions").Where("customer_uuid", "==", customerUuid.String()).Documents(ctx)
 	for {
 		doc, err := iter.Next()
 		if errors.Is(err, iterator.Done) {
@@ -77,9 +71,7 @@ func (r *SubscriptionRepo) GetByCustomerUuid(ctx context.Context, customerUuid u
 }
 
 func (r *SubscriptionRepo) Create(ctx context.Context, subscription *models.Subscription) error {
-	c, cancel := context.WithTimeout(ctx, defaultTimeout)
-	defer cancel()
-	_, err := r.client.Collection("subscriptions").Doc(subscription.Uuid.String()).Set(c, ModelToSubscriptionFire(subscription))
+	_, err := r.client.Collection("subscriptions").Doc(subscription.Uuid.String()).Set(ctx, ModelToSubscriptionFire(subscription))
 	if err != nil {
 		return err
 	}
@@ -87,19 +79,15 @@ func (r *SubscriptionRepo) Create(ctx context.Context, subscription *models.Subs
 }
 
 func (r *SubscriptionRepo) Update(ctx context.Context, subscription *models.Subscription) error {
-	c, cancel := context.WithTimeout(ctx, defaultTimeout)
-	defer cancel()
-	_, err := r.client.Collection("subscriptions").Doc(subscription.Uuid.String()).Set(c, ModelToSubscriptionFire(subscription))
+	_, err := r.client.Collection("subscriptions").Doc(subscription.Uuid.String()).Set(ctx, ModelToSubscriptionFire(subscription))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *SubscriptionRepo) Delete(ctx context.Context, subscription *models.Subscription) error {
-	c, cancel := context.WithTimeout(ctx, defaultTimeout)
-	defer cancel()
-	_, err := r.client.Collection("subscriptions").Doc(ModelToSubscriptionFire(subscription).Uuid).Delete(c)
+func (r *SubscriptionRepo) Delete(ctx context.Context, subscriptionUUID uuid.UUID) error {
+	_, err := r.client.Collection("subscriptions").Doc(subscriptionUUID.String()).Delete(ctx)
 	if err != nil {
 		return err
 	}

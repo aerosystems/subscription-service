@@ -72,9 +72,9 @@ func (ss SubscriptionUsecase) GetSubscription(customerUuid uuid.UUID) (*models.S
 	return ss.subsRepo.GetByCustomerUuid(ctx, customerUuid)
 }
 
-func (ss SubscriptionUsecase) DeleteSubscription(customerUuid uuid.UUID) error {
+func (ss SubscriptionUsecase) DeleteSubscription(subscriptionUUID uuid.UUID) error {
 	ctx := context.Background()
-	sub, err := ss.subsRepo.GetByCustomerUuid(ctx, customerUuid)
+	sub, err := ss.subsRepo.GetByCustomerUuid(ctx, subscriptionUUID)
 	if err != nil {
 		return err
 	}

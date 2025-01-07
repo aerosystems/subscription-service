@@ -66,11 +66,8 @@ func (r *InvoiceRepo) Create(ctx context.Context, invoice *models.Invoice) error
 }
 
 func (r *InvoiceRepo) GetByAcquiringInvoiceId(ctx context.Context, acquiringInvoiceId string) (*models.Invoice, error) {
-	c, cancel := context.WithTimeout(ctx, defaultTimeout)
-	defer cancel()
-
 	var invoiceFire InvoiceFire
-	iter := r.client.Collection(collectionName).Where("acquiring_invoice_id", "==", acquiringInvoiceId).Documents(c)
+	iter := r.client.Collection(collectionName).Where("acquiring_invoice_id", "==", acquiringInvoiceId).Documents(ctx)
 	for {
 		doc, err := iter.Next()
 		if errors.Is(err, iterator.Done) {
@@ -89,10 +86,7 @@ func (r *InvoiceRepo) GetByAcquiringInvoiceId(ctx context.Context, acquiringInvo
 }
 
 func (r *InvoiceRepo) Update(ctx context.Context, invoice *models.Invoice) error {
-	c, cancel := context.WithTimeout(ctx, defaultTimeout)
-	defer cancel()
-
-	_, err := r.client.Collection(collectionName).Doc(invoice.InvoiceUuid.String()).Set(c, invoice)
+	_, err := r.client.Collection(collectionName).Doc(invoice.InvoiceUuid.String()).Set(ctx, invoice)
 	if err != nil {
 		return err
 	}
