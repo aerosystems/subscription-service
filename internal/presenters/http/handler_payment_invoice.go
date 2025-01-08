@@ -1,10 +1,8 @@
-package payment
+package HTTPServer
 
 import (
 	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
 	"github.com/aerosystems/subscription-service/internal/models"
-	"github.com/aerosystems/subscription-service/internal/presenters/http/middleware"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -33,8 +31,8 @@ type InvoiceResponse struct {
 // @Failure 422 {object} handlers.ErrorResponse
 // @Failure 500 {object} handlers.ErrorResponse
 // @Router /v1/invoices/{payment_method} [post]
-func (ph Handler) CreateInvoice(c echo.Context) error {
-	user, err := middleware.GetUserFromContext(c.Request().Context())
+func (ph PaymentHandler) CreateInvoice(c echo.Context) error {
+	user, err := GetUserFromContext(c.Request().Context())
 	if err != nil {
 		return err
 	}
@@ -46,7 +44,7 @@ func (ph Handler) CreateInvoice(c echo.Context) error {
 	if err := c.Bind(&requestBody); err != nil {
 		return CustomErrors.ErrInvalidRequestBody
 	}
-	paymentUrl, err := ph.paymentUsecase.GetPaymentUrl(uuid.MustParse(user.Uuid), requestBody.SubscriptionType, requestBody.SubscriptionDuration)
+	paymentUrl, err := ph.paymentUsecase.GetPaymentUrl(user.UUID, requestBody.SubscriptionType, requestBody.SubscriptionDuration)
 	if err != nil {
 		return err
 	}

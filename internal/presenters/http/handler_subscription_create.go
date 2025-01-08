@@ -1,4 +1,4 @@
-package subscription
+package HTTPServer
 
 import (
 	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
@@ -47,7 +47,7 @@ func ModelToCreateSubscriptionResponse(subscription *models.Subscription) *Creat
 // @Failure 403 {object} handlers.ErrorResponse
 // @Failure 500 {object} handlers.ErrorResponse
 // @Router /v1/subscriptions/create [post]
-func (sh Handler) CreateSubscription(c echo.Context) error {
+func (sh SubscriptionHandler) CreateSubscription(c echo.Context) error {
 	var requestPayload CreateSubscriptionRequest
 	if err := c.Bind(&requestPayload); err != nil {
 		return CustomErrors.ErrInvalidRequestBody

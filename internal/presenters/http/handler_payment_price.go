@@ -1,4 +1,4 @@
-package payment
+package HTTPServer
 
 import (
 	"github.com/aerosystems/subscription-service/internal/models"
@@ -30,6 +30,6 @@ func ModelToPriceResponse(prices map[models.SubscriptionType]map[models.Subscrip
 // @Success 200 {object} map[string]map[string]int
 // @Failure 500 {object} handlers.ErrorResponse
 // @Router /v1/prices [get]
-func (ph Handler) GetPrices(c echo.Context) error {
+func (ph PaymentHandler) GetPrices(c echo.Context) error {
 	return c.JSON(http.StatusOK, ModelToPriceResponse(ph.paymentUsecase.GetPrices()))
 }

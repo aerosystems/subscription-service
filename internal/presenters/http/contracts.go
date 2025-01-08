@@ -1,4 +1,4 @@
-package handlers
+package HTTPServer
 
 import (
 	"github.com/aerosystems/subscription-service/internal/models"

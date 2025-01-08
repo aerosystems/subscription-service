@@ -1,4 +1,4 @@
-package HttpServer
+package HTTPServer
 
 import (
 	"github.com/aerosystems/subscription-service/internal/validators"

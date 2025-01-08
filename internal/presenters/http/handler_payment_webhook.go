@@ -1,4 +1,4 @@
-package payment
+package HTTPServer
 
 import (
 	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (ph Handler) WebhookPayment(c echo.Context) error {
+func (ph PaymentHandler) WebhookPayment(c echo.Context) error {
 	method := models.NewPaymentMethod(c.Param("payment_method"))
 	if err := ph.paymentUsecase.SetPaymentMethod(method); err != nil {
 		return err

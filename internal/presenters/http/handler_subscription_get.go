@@ -1,9 +1,7 @@
-package subscription
+package HTTPServer
 
 import (
 	"github.com/aerosystems/subscription-service/internal/models"
-	"github.com/aerosystems/subscription-service/internal/presenters/http/middleware"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -34,12 +32,12 @@ func ModelToSubscriptionResponse(subscription *models.Subscription) *GetSubscrip
 // @Failure 403 {object} handlers.ErrorResponse
 // @Failure 500 {object} handlers.ErrorResponse
 // @Router /v1/subscriptions [get]
-func (sh Handler) GetSubscriptions(c echo.Context) error {
-	user, err := middleware.GetUserFromContext(c.Request().Context())
+func (sh SubscriptionHandler) GetSubscriptions(c echo.Context) error {
+	user, err := GetUserFromContext(c.Request().Context())
 	if err != nil {
 		return err
 	}
-	subscription, err := sh.subscriptionUsecase.GetSubscription(uuid.MustParse(user.Uuid))
+	subscription, err := sh.subscriptionUsecase.GetSubscription(user.UUID)
 	if err != nil {
 		return err
 	}

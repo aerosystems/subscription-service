@@ -1,4 +1,4 @@
-package subscription
+package HTTPServer
 
 import (
 	"github.com/labstack/echo/v4"
@@ -15,6 +15,6 @@ import (
 // @Param subscriptionId path string true "Subscription ID"
 // @Failure 501 {object} handlers.ErrorResponse
 // @Router /v1/subscriptions/{subscriptionId} [delete]
-func (sh Handler) DeleteSubscription(c echo.Context) error {
+func (sh SubscriptionHandler) DeleteSubscription(c echo.Context) error {
 	return echo.NewHTTPError(http.StatusNotImplemented, "not implemented")
 }
