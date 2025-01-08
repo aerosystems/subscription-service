@@ -21,13 +21,13 @@ func NewSubscriptionRepo(client *firestore.Client) *SubscriptionRepo {
 }
 
 type SubscriptionFire struct {
-	Uuid         string    `FirestoreRepo:"uuid"`
-	CustomerUuid string    `FirestoreRepo:"customer_uuid"`
-	Type         string    `FirestoreRepo:"type"`
-	Duration     string    `FirestoreRepo:"duration"`
-	AccessTime   time.Time `FirestoreRepo:"access_time"`
-	CreatedAt    time.Time `FirestoreRepo:"created_at"`
-	UpdatedAt    time.Time `FirestoreRepo:"updated_at"`
+	Uuid         string    `firestore:"uuid"`
+	CustomerUuid string    `firestore:"customer_uuid"`
+	Type         string    `firestore:"type"`
+	Duration     string    `firestore:"duration"`
+	AccessTime   time.Time `firestore:"access_time"`
+	CreatedAt    time.Time `firestore:"created_at"`
+	UpdatedAt    time.Time `firestore:"updated_at"`
 }
 
 func (s *SubscriptionFire) ToModel() *models.Subscription {
