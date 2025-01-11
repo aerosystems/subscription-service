@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/firestore v1.15.0
 	cloud.google.com/go/pubsub v1.36.1
 	firebase.google.com/go v3.13.0+incompatible
+	github.com/go-logrusutil/logrusutil v1.1.1
 	github.com/go-playground/validator/v10 v10.19.0
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.6.0
