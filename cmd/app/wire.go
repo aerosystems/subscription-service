@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"cloud.google.com/go/firestore"
-	"firebase.google.com/go/auth"
+	"firebase.google.com/go/v4/auth"
 	"github.com/google/wire"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
