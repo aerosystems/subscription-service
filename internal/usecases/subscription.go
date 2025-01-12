@@ -31,8 +31,8 @@ func NewSubscription(customerUuid uuid.UUID, subscriptionType models.Subscriptio
 	}
 }
 
-func (ss SubscriptionUsecase) CreateSubscription(customerUuidStr, subscriptionTypeStr, subscriptionDurationStr string) (*models.Subscription, error) {
-	customerUuid, err := uuid.Parse(customerUuidStr)
+func (ss SubscriptionUsecase) CreateSubscription(customerUUID, subscriptionTypeStr, subscriptionDurationStr string) (*models.Subscription, error) {
+	customerUuid, err := uuid.Parse(customerUUID)
 	if err != nil {
 		return nil, CustomErrors.ErrInvalidCustomerUuid
 	}
@@ -51,8 +51,8 @@ func (ss SubscriptionUsecase) CreateSubscription(customerUuidStr, subscriptionTy
 	return sub, nil
 }
 
-func (ss SubscriptionUsecase) CreateFreeTrial(customerUuidStr string) (*models.Subscription, error) {
-	customerUuid, err := uuid.Parse(customerUuidStr)
+func (ss SubscriptionUsecase) CreateFreeTrial(customerUUID string) (*models.Subscription, error) {
+	customerUuid, err := uuid.Parse(customerUUID)
 	if err != nil {
 		return nil, CustomErrors.ErrInvalidCustomerUuid
 	}
@@ -63,8 +63,8 @@ func (ss SubscriptionUsecase) CreateFreeTrial(customerUuidStr string) (*models.S
 	return sub, nil
 }
 
-func (ss SubscriptionUsecase) GetSubscription(customerUuid uuid.UUID) (*models.Subscription, error) {
-	return ss.subsRepo.GetByCustomerUuid(context.TODO(), customerUuid)
+func (ss SubscriptionUsecase) GetSubscription(customerUUID uuid.UUID) (*models.Subscription, error) {
+	return ss.subsRepo.GetByCustomerUuid(context.TODO(), customerUUID)
 }
 
 func (ss SubscriptionUsecase) DeleteSubscription(subscriptionUUID uuid.UUID) error {
