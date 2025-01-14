@@ -8,8 +8,8 @@ import (
 )
 
 type InvoiceRequest struct {
-	SubscriptionType     models.SubscriptionType     `json:"kindSubscription" validate:"required" example:"business"`
-	SubscriptionDuration models.SubscriptionDuration `json:"durationSubscription" validate:"required" example:"12m"`
+	SubscriptionType     string `json:"subscriptionType" validate:"required" example:"business"`
+	SubscriptionDuration string `json:"subscriptionDuration" validate:"required" example:"12m"`
 }
 
 type InvoiceResponse struct {
@@ -36,17 +36,24 @@ func (ph PaymentHandler) CreateInvoice(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
 	method := models.NewPaymentMethod(c.Param("payment_method"))
-	if err := ph.paymentUsecase.SetPaymentMethod(method); err != nil {
+	if err = ph.paymentUsecase.SetPaymentMethod(method); err != nil {
 		return err
 	}
+
 	var requestBody InvoiceRequest
-	if err := c.Bind(&requestBody); err != nil {
+	if err = c.Bind(&requestBody); err != nil {
 		return CustomErrors.ErrInvalidRequestBody
 	}
-	paymentUrl, err := ph.paymentUsecase.GetPaymentUrl(user.UUID, requestBody.SubscriptionType, requestBody.SubscriptionDuration)
+
+	paymentUrl, err := ph.paymentUsecase.GetPaymentUrl(
+		user.UUID,
+		models.SubscriptionTypeFromString(requestBody.SubscriptionType),
+		models.SubscriptionDurationFromString(requestBody.SubscriptionDuration))
 	if err != nil {
 		return err
 	}
+
 	return c.JSON(http.StatusCreated, InvoiceResponse{PaymentUrl: paymentUrl})
 }

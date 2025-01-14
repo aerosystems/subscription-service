@@ -24,8 +24,8 @@ func NewPriceRepo() *PriceRepo {
 	}
 }
 
-func (pr *PriceRepo) GetPrice(kindSubscription models.SubscriptionType, durationSubscription models.SubscriptionDuration) (int, error) {
-	price, ok := pr.priceMap[kindSubscription][durationSubscription]
+func (pr *PriceRepo) GetPrice(subscriptionType models.SubscriptionType, subscriptionDuration models.SubscriptionDuration) (int, error) {
+	price, ok := pr.priceMap[subscriptionType][subscriptionDuration]
 	if !ok {
 		return 0, errors.New("price not found")
 	}

@@ -63,7 +63,7 @@ func (ps PaymentUsecase) GetPaymentUrl(userUuid uuid.UUID, subscription models.S
 	if err != nil {
 		return "", err
 	}
-	if err := ps.invoiceRepo.Create(context.Background(), &models.Invoice{
+	if err = ps.invoiceRepo.Create(context.Background(), &models.Invoice{
 		CustomerUuid:       userUuid,
 		Amount:             amount,
 		InvoiceUuid:        invoiceUuid,
