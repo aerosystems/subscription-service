@@ -30,6 +30,7 @@ func NewPaymentUsecase(invoiceRepo InvoiceRepository, priceRepo PriceRepository,
 		panic("strategies is required")
 	}
 	return &PaymentUsecase{
+		acquiring:   strategies[models.UnknownPaymentMethod],
 		invoiceRepo: invoiceRepo,
 		priceRepo:   priceRepo,
 		strategies:  strategies,
