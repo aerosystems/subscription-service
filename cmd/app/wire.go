@@ -60,7 +60,19 @@ func InitApp() *App {
 }
 
 func ProvideApp(log *logrus.Logger, cfg *config.Config, httpServer *HTTPServer.Server, gpcServer *GRPCServer.Server) *App {
-	panic(wire.Build(NewApp))
+	if log == nil {
+		panic("log is nil")
+	}
+	if cfg == nil {
+		panic("config is nil")
+	}
+	if httpServer == nil {
+		panic("HTTP server is nil")
+	}
+	if gpcServer == nil {
+		panic("GRPC server is nil")
+	}
+	return NewApp(log, cfg, httpServer, gpcServer)
 }
 
 func ProvideLogger() *logger.Logger {
@@ -72,6 +84,24 @@ func ProvideConfig() *config.Config {
 }
 
 func ProvideHttpServer(cfg *config.Config, log *logrus.Logger, errorHandler *echo.HTTPErrorHandler, firebaseAuthMiddleware *HTTPServer.FirebaseAuth, subscriptionHandler *HTTPServer.SubscriptionHandler, paymentHandler *HTTPServer.PaymentHandler) *HTTPServer.Server {
+	if cfg == nil {
+		panic("config is nil")
+	}
+	if log == nil {
+		panic("log is nil")
+	}
+	if errorHandler == nil {
+		panic("error handler is nil")
+	}
+	if firebaseAuthMiddleware == nil {
+		panic("Firebase Auth middleware is nil")
+	}
+	if subscriptionHandler == nil {
+		panic("subscription handler is nil")
+	}
+	if paymentHandler == nil {
+		panic("payment handler is nil")
+	}
 	return HTTPServer.NewServer(cfg.Port, log, errorHandler, firebaseAuthMiddleware, subscriptionHandler, paymentHandler)
 }
 
