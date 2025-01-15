@@ -6,6 +6,8 @@ import (
 	"github.com/aerosystems/subscription-service/pkg/monobank"
 )
 
+const signHeaderName = "X-Sign"
+
 type MonobankStrategy struct {
 	monobankAcquiring *monobank.Acquiring
 	paymentMethod     models.PaymentMethod
@@ -15,6 +17,9 @@ type MonobankStrategy struct {
 }
 
 func NewMonobankStrategy(monobankClient *monobank.Acquiring, redirectUrl, webHookUrl string, currency monobank.Ccy) *MonobankStrategy {
+	if monobankClient == nil {
+		panic("monobankClient is required")
+	}
 	return &MonobankStrategy{
 		monobankAcquiring: monobankClient,
 		paymentMethod:     models.MonobankPaymentMethod,
@@ -48,7 +53,7 @@ func (ms MonobankStrategy) CreateInvoice(amount int, invoiceUuid, title, descrip
 }
 
 func (ms MonobankStrategy) GetWebhookFromRequest(bodyBytes []byte, headers map[string][]string) (Webhook, error) {
-	xSignBase64 := headers["X-Sign"][0]
+	xSignBase64 := headers[signHeaderName][0]
 	if err := ms.monobankAcquiring.CheckWebhookSignature(bodyBytes, xSignBase64); err != nil {
 		return Webhook{}, err
 	}

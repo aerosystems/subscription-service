@@ -20,6 +20,18 @@ func NewApp(
 	httpServer *HttpServer.Server,
 	grpcServer *GRPCServer.Server,
 ) *App {
+	if log == nil {
+		panic("log is required")
+	}
+	if cfg == nil {
+		panic("cfg is required")
+	}
+	if httpServer == nil {
+		panic("httpServer is required")
+	}
+	if grpcServer == nil {
+		panic("grpcServer is required")
+	}
 	return &App{
 		log:        log,
 		cfg:        cfg,

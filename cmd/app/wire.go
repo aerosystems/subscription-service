@@ -60,19 +60,7 @@ func InitApp() *App {
 }
 
 func ProvideApp(log *logrus.Logger, cfg *config.Config, httpServer *HTTPServer.Server, gpcServer *GRPCServer.Server) *App {
-	if log == nil {
-		panic("log is nil")
-	}
-	if cfg == nil {
-		panic("config is nil")
-	}
-	if httpServer == nil {
-		panic("HTTP server is nil")
-	}
-	if gpcServer == nil {
-		panic("GRPC server is nil")
-	}
-	return NewApp(log, cfg, httpServer, gpcServer)
+	panic(wire.Build(NewApp))
 }
 
 func ProvideLogger() *logger.Logger {

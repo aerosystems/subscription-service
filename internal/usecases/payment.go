@@ -20,6 +20,15 @@ type PaymentUsecase struct {
 }
 
 func NewPaymentUsecase(invoiceRepo InvoiceRepository, priceRepo PriceRepository, strategies map[models.PaymentMethod]AcquiringOperations) *PaymentUsecase {
+	if invoiceRepo == nil {
+		panic("invoiceRepo is required")
+	}
+	if priceRepo == nil {
+		panic("priceRepo is required")
+	}
+	if len(strategies) == 0 {
+		panic("strategies is required")
+	}
 	return &PaymentUsecase{
 		invoiceRepo: invoiceRepo,
 		priceRepo:   priceRepo,
