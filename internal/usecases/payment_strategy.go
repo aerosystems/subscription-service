@@ -7,7 +7,7 @@ import (
 
 type UnknownStrategy struct{}
 
-func NewUnknownStrategy() *UnknownStrategy {
+func newUnknownStrategy() *UnknownStrategy {
 	return &UnknownStrategy{}
 }
 

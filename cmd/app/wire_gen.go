@@ -13,7 +13,6 @@ import (
 	"github.com/aerosystems/subscription-service/internal/adapters"
 	"github.com/aerosystems/subscription-service/internal/common/config"
 	"github.com/aerosystems/subscription-service/internal/common/custom_errors"
-	"github.com/aerosystems/subscription-service/internal/models"
 	"github.com/aerosystems/subscription-service/internal/presenters/grpc"
 	"github.com/aerosystems/subscription-service/internal/presenters/http"
 	"github.com/aerosystems/subscription-service/internal/usecases"
@@ -43,8 +42,7 @@ func InitApp() *App {
 	priceRepo := ProvidePriceRepo()
 	acquiring := ProvideMonobankAcquiring(config)
 	monobankStrategy := ProvideMonobankStrategy(acquiring, config)
-	v := ProvidePaymentMap(monobankStrategy)
-	paymentUsecase := ProvidePaymentUsecase(invoiceRepo, priceRepo, v)
+	paymentUsecase := ProvidePaymentUsecase(invoiceRepo, priceRepo, monobankStrategy)
 	paymentHandler := ProvidePaymentHandler(baseHandler, paymentUsecase)
 	server := ProvideHttpServer(config, logrusLogger, httpErrorHandler, firebaseAuth, subscriptionHandler, paymentHandler)
 	grpcServerSubscriptionHandler := ProvideGRPCSubscriptionHandler(subscriptionUsecase)
@@ -81,11 +79,6 @@ func ProvidePaymentHandler(baseHandler *HTTPServer.BaseHandler, paymentUsecase H
 func ProvideSubscriptionHandler(baseHandler *HTTPServer.BaseHandler, subscriptionUsecase HTTPServer.SubscriptionUsecase) *HTTPServer.SubscriptionHandler {
 	subscriptionHandler := HTTPServer.NewSubscriptionHandler(baseHandler, subscriptionUsecase)
 	return subscriptionHandler
-}
-
-func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo usecases.PriceRepository, strategies map[models.PaymentMethod]usecases.AcquiringOperations) *usecases.PaymentUsecase {
-	paymentUsecase := usecases.NewPaymentUsecase(invoiceRepo, priceRepo, strategies)
-	return paymentUsecase
 }
 
 func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository) *usecases.SubscriptionUsecase {
@@ -144,8 +137,8 @@ func ProvideBaseHandler(log *logrus.Logger, cfg *config.Config) *HTTPServer.Base
 	return HTTPServer.NewBaseHandler(log, cfg.Mode)
 }
 
-func ProvidePaymentMap(monobankStrategy *usecases.MonobankStrategy) map[models.PaymentMethod]usecases.AcquiringOperations {
-	return map[models.PaymentMethod]usecases.AcquiringOperations{models.MonobankPaymentMethod: monobankStrategy}
+func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo usecases.PriceRepository, monobankStrategy usecases.AcquiringOperations) *usecases.PaymentUsecase {
+	return usecases.NewPaymentUsecase(invoiceRepo, priceRepo, monobankStrategy)
 }
 
 func ProvideMonobankStrategy(acquiring *monobank.Acquiring, cfg *config.Config) *usecases.MonobankStrategy {

@@ -19,21 +19,27 @@ type PaymentUsecase struct {
 	strategies  map[models.PaymentMethod]AcquiringOperations
 }
 
-func NewPaymentUsecase(invoiceRepo InvoiceRepository, priceRepo PriceRepository, strategies map[models.PaymentMethod]AcquiringOperations) *PaymentUsecase {
+func NewPaymentUsecase(invoiceRepo InvoiceRepository, priceRepo PriceRepository, strategies ...AcquiringOperations) *PaymentUsecase {
 	if invoiceRepo == nil {
 		panic("invoiceRepo is required")
 	}
 	if priceRepo == nil {
 		panic("priceRepo is required")
 	}
-	if len(strategies) == 0 {
-		panic("strategies is required")
+
+	registry := map[models.PaymentMethod]AcquiringOperations{
+		models.UnknownPaymentMethod: newUnknownStrategy(),
 	}
+
+	for _, strategy := range strategies {
+		registry[strategy.GetPaymentMethod()] = strategy
+	}
+
 	return &PaymentUsecase{
-		acquiring:   strategies[models.UnknownPaymentMethod],
+		acquiring:   registry[models.UnknownPaymentMethod],
 		invoiceRepo: invoiceRepo,
 		priceRepo:   priceRepo,
-		strategies:  strategies,
+		strategies:  registry,
 	}
 }
 

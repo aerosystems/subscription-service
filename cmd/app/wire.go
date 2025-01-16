@@ -15,7 +15,6 @@ import (
 	"github.com/aerosystems/subscription-service/internal/adapters"
 	"github.com/aerosystems/subscription-service/internal/common/config"
 	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
-	"github.com/aerosystems/subscription-service/internal/models"
 	GRPCServer "github.com/aerosystems/subscription-service/internal/presenters/grpc"
 	HTTPServer "github.com/aerosystems/subscription-service/internal/presenters/http"
 	"github.com/aerosystems/subscription-service/internal/usecases"
@@ -33,6 +32,7 @@ func InitApp() *App {
 		wire.Bind(new(usecases.SubscriptionRepository), new(*adapters.SubscriptionRepo)),
 		wire.Bind(new(usecases.InvoiceRepository), new(*adapters.InvoiceRepo)),
 		wire.Bind(new(usecases.PriceRepository), new(*adapters.PriceRepo)),
+		wire.Bind(new(usecases.AcquiringOperations), new(*usecases.MonobankStrategy)),
 		ProvideApp,
 		ProvideLogger,
 		ProvideConfig,
@@ -44,7 +44,6 @@ func InitApp() *App {
 		ProvidePaymentHandler,
 		ProvideSubscriptionHandler,
 		ProvidePaymentUsecase,
-		ProvidePaymentMap,
 		ProvideMonobankStrategy,
 		ProvideMonobankAcquiring,
 		ProvideSubscriptionUsecase,
@@ -117,14 +116,8 @@ func ProvideSubscriptionHandler(baseHandler *HTTPServer.BaseHandler, subscriptio
 	panic(wire.Build(HTTPServer.NewSubscriptionHandler))
 }
 
-func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo usecases.PriceRepository, strategies map[models.PaymentMethod]usecases.AcquiringOperations) *usecases.PaymentUsecase {
-	panic(wire.Build(usecases.NewPaymentUsecase))
-}
-
-func ProvidePaymentMap(monobankStrategy *usecases.MonobankStrategy) map[models.PaymentMethod]usecases.AcquiringOperations {
-	return map[models.PaymentMethod]usecases.AcquiringOperations{
-		models.MonobankPaymentMethod: monobankStrategy,
-	}
+func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo usecases.PriceRepository, monobankStrategy usecases.AcquiringOperations) *usecases.PaymentUsecase {
+	return usecases.NewPaymentUsecase(invoiceRepo, priceRepo, monobankStrategy)
 }
 
 func ProvideMonobankStrategy(acquiring *monobank.Acquiring, cfg *config.Config) *usecases.MonobankStrategy {
