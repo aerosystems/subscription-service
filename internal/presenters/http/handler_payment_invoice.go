@@ -3,6 +3,7 @@ package HTTPServer
 import (
 	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
 	"github.com/aerosystems/subscription-service/internal/models"
+	"github.com/go-logrusutil/logrusutil/logctx"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -38,6 +39,7 @@ func (ph PaymentHandler) CreateInvoice(c echo.Context) error {
 	}
 
 	method := models.NewPaymentMethod(c.Param("payment_method"))
+	logctx.From(c.Request().Context()).WithField("payment_method", method).Info("set payment method")
 	if err = ph.paymentUsecase.SetPaymentMethod(method); err != nil {
 		return err
 	}
