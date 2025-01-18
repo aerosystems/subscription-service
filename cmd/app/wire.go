@@ -32,7 +32,7 @@ func InitApp() *App {
 		wire.Bind(new(usecases.SubscriptionRepository), new(*adapters.SubscriptionRepo)),
 		wire.Bind(new(usecases.InvoiceRepository), new(*adapters.InvoiceRepo)),
 		wire.Bind(new(usecases.PriceRepository), new(*adapters.PriceRepo)),
-		wire.Bind(new(usecases.AcquiringOperations), new(*usecases.MonobankStrategy)),
+		wire.Bind(new(usecases.AcquiringOperations), new(*usecases.MonobankAcquiring)),
 		ProvideApp,
 		ProvideLogger,
 		ProvideConfig,
@@ -71,24 +71,6 @@ func ProvideConfig() *config.Config {
 }
 
 func ProvideHttpServer(cfg *config.Config, log *logrus.Logger, errorHandler *echo.HTTPErrorHandler, firebaseAuthMiddleware *HTTPServer.FirebaseAuth, subscriptionHandler *HTTPServer.SubscriptionHandler, paymentHandler *HTTPServer.PaymentHandler) *HTTPServer.Server {
-	if cfg == nil {
-		panic("config is nil")
-	}
-	if log == nil {
-		panic("log is nil")
-	}
-	if errorHandler == nil {
-		panic("error handler is nil")
-	}
-	if firebaseAuthMiddleware == nil {
-		panic("Firebase Auth middleware is nil")
-	}
-	if subscriptionHandler == nil {
-		panic("subscription handler is nil")
-	}
-	if paymentHandler == nil {
-		panic("payment handler is nil")
-	}
 	return HTTPServer.NewServer(cfg.Port, log, errorHandler, firebaseAuthMiddleware, subscriptionHandler, paymentHandler)
 }
 
@@ -120,8 +102,8 @@ func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo use
 	return usecases.NewPaymentUsecase(invoiceRepo, priceRepo, monobankStrategy)
 }
 
-func ProvideMonobankStrategy(acquiring *monobank.Acquiring, cfg *config.Config) *usecases.MonobankStrategy {
-	return usecases.NewMonobankStrategy(acquiring, cfg.MonobankRedirectUrl, cfg.MonobankWebHookUrl, monobank.USD)
+func ProvideMonobankStrategy(acquiring *monobank.Acquiring, cfg *config.Config) *usecases.MonobankAcquiring {
+	return usecases.NewMonobankAcquiring(acquiring, cfg.MonobankRedirectUrl, cfg.MonobankWebHookUrl, monobank.USD)
 }
 
 func ProvideMonobankAcquiring(cfg *config.Config) *monobank.Acquiring {

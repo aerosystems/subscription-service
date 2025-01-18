@@ -8,7 +8,7 @@ import (
 
 const signHeaderName = "X-Sign"
 
-type MonobankStrategy struct {
+type MonobankAcquiring struct {
 	monobankAcquiring *monobank.Acquiring
 	paymentMethod     models.PaymentMethod
 	redirectUrl       string
@@ -16,11 +16,11 @@ type MonobankStrategy struct {
 	currency          monobank.Ccy
 }
 
-func NewMonobankStrategy(monobankClient *monobank.Acquiring, redirectUrl, webHookUrl string, currency monobank.Ccy) *MonobankStrategy {
+func NewMonobankAcquiring(monobankClient *monobank.Acquiring, redirectUrl, webHookUrl string, currency monobank.Ccy) *MonobankAcquiring {
 	if monobankClient == nil {
 		panic("monobankClient is required")
 	}
-	return &MonobankStrategy{
+	return &MonobankAcquiring{
 		monobankAcquiring: monobankClient,
 		paymentMethod:     models.MonobankPaymentMethod,
 		redirectUrl:       redirectUrl,
@@ -29,11 +29,11 @@ func NewMonobankStrategy(monobankClient *monobank.Acquiring, redirectUrl, webHoo
 	}
 }
 
-func (ms MonobankStrategy) GetPaymentMethod() models.PaymentMethod {
+func (ms MonobankAcquiring) GetPaymentMethod() models.PaymentMethod {
 	return ms.paymentMethod
 }
 
-func (ms MonobankStrategy) CreateInvoice(amount int, invoiceUuid, title, description string) (Invoice, error) {
+func (ms MonobankAcquiring) CreateInvoice(amount int, invoiceUuid, title, description string) (Invoice, error) {
 	monoInvoice := &monobank.Invoice{
 		Amount:      amount,
 		Ccy:         ms.currency,
@@ -52,7 +52,7 @@ func (ms MonobankStrategy) CreateInvoice(amount int, invoiceUuid, title, descrip
 	return Invoice{invoice.InvoiceId, invoice.PageUrl}, nil
 }
 
-func (ms MonobankStrategy) GetWebhookFromRequest(bodyBytes []byte, headers map[string][]string) (Webhook, error) {
+func (ms MonobankAcquiring) GetWebhookFromRequest(bodyBytes []byte, headers map[string][]string) (Webhook, error) {
 	xSignBase64 := headers[signHeaderName][0]
 	if err := ms.monobankAcquiring.CheckWebhookSignature(bodyBytes, xSignBase64); err != nil {
 		return Webhook{}, err
@@ -68,7 +68,7 @@ func (ms MonobankStrategy) GetWebhookFromRequest(bodyBytes []byte, headers map[s
 	}, nil
 }
 
-func (ms MonobankStrategy) ConvertStatus(status string) models.PaymentStatus {
+func (ms MonobankAcquiring) ConvertStatus(status string) models.PaymentStatus {
 	switch status {
 	case monobank.InvoiceStatusProcessing:
 		return models.PaymentStatusPending

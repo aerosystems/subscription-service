@@ -13,8 +13,7 @@ type SubscriptionUsecase interface {
 }
 
 type PaymentUsecase interface {
-	SetPaymentMethod(paymentMethod models.PaymentMethod) error
-	GetPaymentUrl(userUuid uuid.UUID, subscription models.SubscriptionType, duration models.SubscriptionDuration) (string, error)
-	ProcessingWebhookPayment(bodyBytes []byte, headers map[string][]string) error
+	GetPaymentUrl(userUuid uuid.UUID, paymentMethod models.PaymentMethod, subscription models.SubscriptionType, duration models.SubscriptionDuration) (string, error)
+	ProcessingWebhookPayment(paymentMethod models.PaymentMethod, bodyBytes []byte, headers map[string][]string) error
 	GetPrices() map[models.SubscriptionType]map[models.SubscriptionDuration]int
 }

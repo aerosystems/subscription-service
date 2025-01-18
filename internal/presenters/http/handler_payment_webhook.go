@@ -10,14 +10,11 @@ import (
 
 func (ph PaymentHandler) WebhookPayment(c echo.Context) error {
 	method := models.NewPaymentMethod(c.Param("payment_method"))
-	if err := ph.paymentUsecase.SetPaymentMethod(method); err != nil {
-		return err
-	}
 	body, err := io.ReadAll(c.Request().Body)
 	if err != nil {
 		return CustomErrors.ErrInvalidRequestPayload
 	}
-	if err := ph.paymentUsecase.ProcessingWebhookPayment(body, c.Request().Header); err != nil {
+	if err := ph.paymentUsecase.ProcessingWebhookPayment(method, body, c.Request().Header); err != nil {
 		return err
 	}
 	return c.JSON(http.StatusOK, nil)
