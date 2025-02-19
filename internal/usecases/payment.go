@@ -3,7 +3,7 @@ package usecases
 import (
 	"context"
 	"fmt"
-	"github.com/aerosystems/subscription-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/entities"
 	"github.com/google/uuid"
 	"time"
 )
@@ -15,7 +15,7 @@ const (
 type PaymentUsecase struct {
 	invoiceRepo       InvoiceRepository
 	priceRepo         PriceRepository
-	acquiringRegistry map[models.PaymentMethod]AcquiringOperations
+	acquiringRegistry map[entities.PaymentMethod]AcquiringOperations
 }
 
 func NewPaymentUsecase(invoiceRepo InvoiceRepository, priceRepo PriceRepository, operations ...AcquiringOperations) *PaymentUsecase {
@@ -26,8 +26,8 @@ func NewPaymentUsecase(invoiceRepo InvoiceRepository, priceRepo PriceRepository,
 		panic("priceRepo is required")
 	}
 
-	registry := map[models.PaymentMethod]AcquiringOperations{
-		models.UnknownPaymentMethod: &UnknownAcquiring{},
+	registry := map[entities.PaymentMethod]AcquiringOperations{
+		entities.UnknownPaymentMethod: &UnknownAcquiring{},
 	}
 
 	for _, op := range operations {
@@ -53,12 +53,12 @@ type Webhook struct {
 }
 
 type AcquiringOperations interface {
-	GetPaymentMethod() models.PaymentMethod
+	GetPaymentMethod() entities.PaymentMethod
 	CreateInvoice(amount int, invoiceUuid, title, description string) (Invoice, error)
 	GetWebhookFromRequest(bodyBytes []byte, headers map[string][]string) (Webhook, error)
 }
 
-func (ps PaymentUsecase) GetPaymentUrl(userUUID uuid.UUID, paymentMethod models.PaymentMethod, subscription models.SubscriptionType, duration models.SubscriptionDuration) (string, error) {
+func (ps PaymentUsecase) GetPaymentUrl(ctx context.Context, userUUID uuid.UUID, paymentMethod entities.PaymentMethod, subscription entities.SubscriptionType, duration entities.SubscriptionDuration) (string, error) {
 	amount, err := ps.priceRepo.GetPrice(subscription, duration)
 	if err != nil {
 		return "", err
@@ -73,12 +73,12 @@ func (ps PaymentUsecase) GetPaymentUrl(userUUID uuid.UUID, paymentMethod models.
 	if err != nil {
 		return "", err
 	}
-	if err = ps.invoiceRepo.Create(context.Background(), &models.Invoice{
+	if err = ps.invoiceRepo.Create(ctx, &entities.Invoice{
 		CustomerUuid:       userUUID,
 		Amount:             amount,
 		InvoiceUuid:        invoiceUuid,
 		PaymentMethod:      acquiring.GetPaymentMethod(),
-		PaymentStatus:      models.PaymentStatusCreated,
+		PaymentStatus:      entities.PaymentStatusCreated,
 		AcquiringInvoiceId: invoice.AcquiringInvoiceId,
 	}); err != nil {
 		return "", err
@@ -86,7 +86,7 @@ func (ps PaymentUsecase) GetPaymentUrl(userUUID uuid.UUID, paymentMethod models.
 	return invoice.AcquiringPageUrl, nil
 }
 
-func (ps PaymentUsecase) ProcessingWebhookPayment(paymentMethod models.PaymentMethod, bodyBytes []byte, headers map[string][]string) error {
+func (ps PaymentUsecase) ProcessingWebhookPayment(ctx context.Context, paymentMethod entities.PaymentMethod, bodyBytes []byte, headers map[string][]string) error {
 	acquiring, ok := ps.acquiringRegistry[paymentMethod]
 	if !ok {
 		fmt.Errorf("unknown payment method %s", paymentMethod)
@@ -95,21 +95,21 @@ func (ps PaymentUsecase) ProcessingWebhookPayment(paymentMethod models.PaymentMe
 	if err != nil {
 		return err
 	}
-	invoice, err := ps.invoiceRepo.GetByAcquiringInvoiceId(context.Background(), webhook.AcquiringInvoiceId)
+	invoice, err := ps.invoiceRepo.GetByAcquiringInvoiceId(ctx, webhook.AcquiringInvoiceId)
 	if err != nil {
 		return err
 	}
 	if invoice.UpdatedAt.After(webhook.ModifiedDate) { // to prevent not actual webhook
 		return nil
 	}
-	invoice.PaymentStatus = models.NewPaymentStatus(webhook.Status)
+	invoice.PaymentStatus = entities.NewPaymentStatus(webhook.Status)
 	invoice.UpdatedAt = webhook.ModifiedDate
-	if err := ps.invoiceRepo.Update(context.Background(), invoice); err != nil {
+	if err := ps.invoiceRepo.Update(ctx, invoice); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ps PaymentUsecase) GetPrices() map[models.SubscriptionType]map[models.SubscriptionDuration]int {
+func (ps PaymentUsecase) GetPrices(ctx context.Context) map[entities.SubscriptionType]map[entities.SubscriptionDuration]int {
 	return ps.priceRepo.GetAll()
 }

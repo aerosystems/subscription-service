@@ -4,7 +4,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"errors"
-	"github.com/aerosystems/subscription-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/entities"
 	"github.com/google/uuid"
 	"google.golang.org/api/iterator"
 	"time"
@@ -35,29 +35,29 @@ type InvoiceFire struct {
 	UpdatedAt          time.Time `firestore:"updated_at"`
 }
 
-func (i *InvoiceFire) ToModel() (models.Invoice, error) {
+func (i *InvoiceFire) ToModel() (entities.Invoice, error) {
 	customerId, err := uuid.Parse(i.CustomerUuid)
 	if err != nil {
-		return models.Invoice{}, err
+		return entities.Invoice{}, err
 	}
 	invoiceUuid, err := uuid.Parse(i.InvoiceUuid)
 	if err != nil {
-		return models.Invoice{}, err
+		return entities.Invoice{}, err
 	}
 
-	return models.Invoice{
+	return entities.Invoice{
 		Amount:             i.Amount,
 		CustomerUuid:       customerId,
 		InvoiceUuid:        invoiceUuid,
-		PaymentMethod:      models.NewPaymentMethod(i.PaymentMethod),
+		PaymentMethod:      entities.NewPaymentMethod(i.PaymentMethod),
 		AcquiringInvoiceId: i.AcquiringInvoiceId,
-		PaymentStatus:      models.NewPaymentStatus(i.PaymentStatus),
+		PaymentStatus:      entities.NewPaymentStatus(i.PaymentStatus),
 		CreatedAt:          i.CreatedAt,
 		UpdatedAt:          i.UpdatedAt,
 	}, nil
 }
 
-func (r *InvoiceRepo) Create(ctx context.Context, invoice *models.Invoice) error {
+func (r *InvoiceRepo) Create(ctx context.Context, invoice *entities.Invoice) error {
 	_, _, err := r.client.Collection(collectionName).Add(ctx, invoice)
 	if err != nil {
 		return err
@@ -65,7 +65,7 @@ func (r *InvoiceRepo) Create(ctx context.Context, invoice *models.Invoice) error
 	return nil
 }
 
-func (r *InvoiceRepo) GetByAcquiringInvoiceId(ctx context.Context, acquiringInvoiceId string) (*models.Invoice, error) {
+func (r *InvoiceRepo) GetByAcquiringInvoiceId(ctx context.Context, acquiringInvoiceId string) (*entities.Invoice, error) {
 	var invoiceFire InvoiceFire
 	iter := r.client.Collection(collectionName).Where("acquiring_invoice_id", "==", acquiringInvoiceId).Documents(ctx)
 	for {
@@ -85,7 +85,7 @@ func (r *InvoiceRepo) GetByAcquiringInvoiceId(ctx context.Context, acquiringInvo
 	return &invoice, nil
 }
 
-func (r *InvoiceRepo) Update(ctx context.Context, invoice *models.Invoice) error {
+func (r *InvoiceRepo) Update(ctx context.Context, invoice *entities.Invoice) error {
 	_, err := r.client.Collection(collectionName).Doc(invoice.InvoiceUuid.String()).Set(ctx, invoice)
 	if err != nil {
 		return err

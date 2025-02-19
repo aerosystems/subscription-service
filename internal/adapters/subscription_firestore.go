@@ -4,7 +4,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"errors"
-	"github.com/aerosystems/subscription-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/entities"
 	"github.com/google/uuid"
 	"google.golang.org/api/iterator"
 	"time"
@@ -30,19 +30,19 @@ type SubscriptionFire struct {
 	UpdatedAt    time.Time `firestore:"updated_at"`
 }
 
-func (s *SubscriptionFire) ToModel() *models.Subscription {
-	return &models.Subscription{
+func (s *SubscriptionFire) ToModel() *entities.Subscription {
+	return &entities.Subscription{
 		Uuid:         uuid.MustParse(s.Uuid),
 		CustomerUuid: uuid.MustParse(s.CustomerUuid),
-		Type:         models.SubscriptionTypeFromString(s.Type),
-		Duration:     models.SubscriptionDurationFromString(s.Duration),
+		Type:         entities.SubscriptionTypeFromString(s.Type),
+		Duration:     entities.SubscriptionDurationFromString(s.Duration),
 		AccessTime:   s.AccessTime,
 		CreatedAt:    s.CreatedAt,
 		UpdatedAt:    s.UpdatedAt,
 	}
 }
 
-func ModelToSubscriptionFire(subscription *models.Subscription) *SubscriptionFire {
+func ModelToSubscriptionFire(subscription *entities.Subscription) *SubscriptionFire {
 	return &SubscriptionFire{
 		Uuid:         subscription.Uuid.String(),
 		CustomerUuid: subscription.CustomerUuid.String(),
@@ -54,7 +54,7 @@ func ModelToSubscriptionFire(subscription *models.Subscription) *SubscriptionFir
 	}
 }
 
-func (r *SubscriptionRepo) GetByCustomerUuid(ctx context.Context, customerUuid uuid.UUID) (*models.Subscription, error) {
+func (r *SubscriptionRepo) GetByCustomerUuid(ctx context.Context, customerUuid uuid.UUID) (*entities.Subscription, error) {
 	var subscription SubscriptionFire
 	iter := r.client.Collection("subscriptions").Where("customer_uuid", "==", customerUuid.String()).Documents(ctx)
 	for {
@@ -70,7 +70,7 @@ func (r *SubscriptionRepo) GetByCustomerUuid(ctx context.Context, customerUuid u
 	return subscription.ToModel(), nil
 }
 
-func (r *SubscriptionRepo) Create(ctx context.Context, subscription *models.Subscription) error {
+func (r *SubscriptionRepo) Create(ctx context.Context, subscription *entities.Subscription) error {
 	_, err := r.client.Collection("subscriptions").Doc(subscription.Uuid.String()).Set(ctx, ModelToSubscriptionFire(subscription))
 	if err != nil {
 		return err
@@ -78,7 +78,7 @@ func (r *SubscriptionRepo) Create(ctx context.Context, subscription *models.Subs
 	return nil
 }
 
-func (r *SubscriptionRepo) Update(ctx context.Context, subscription *models.Subscription) error {
+func (r *SubscriptionRepo) Update(ctx context.Context, subscription *entities.Subscription) error {
 	_, err := r.client.Collection("subscriptions").Doc(subscription.Uuid.String()).Set(ctx, ModelToSubscriptionFire(subscription))
 	if err != nil {
 		return err

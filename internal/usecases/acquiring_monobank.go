@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"encoding/json"
-	"github.com/aerosystems/subscription-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/entities"
 	"github.com/aerosystems/subscription-service/pkg/monobank"
 )
 
@@ -10,7 +10,7 @@ const signHeaderName = "X-Sign"
 
 type MonobankAcquiring struct {
 	monobankAcquiring *monobank.Acquiring
-	paymentMethod     models.PaymentMethod
+	paymentMethod     entities.PaymentMethod
 	redirectUrl       string
 	webHookUrl        string
 	currency          monobank.Ccy
@@ -22,14 +22,14 @@ func NewMonobankAcquiring(monobankClient *monobank.Acquiring, redirectUrl, webHo
 	}
 	return &MonobankAcquiring{
 		monobankAcquiring: monobankClient,
-		paymentMethod:     models.MonobankPaymentMethod,
+		paymentMethod:     entities.MonobankPaymentMethod,
 		redirectUrl:       redirectUrl,
 		webHookUrl:        webHookUrl,
 		currency:          currency,
 	}
 }
 
-func (ms MonobankAcquiring) GetPaymentMethod() models.PaymentMethod {
+func (ms MonobankAcquiring) GetPaymentMethod() entities.PaymentMethod {
 	return ms.paymentMethod
 }
 
@@ -68,14 +68,14 @@ func (ms MonobankAcquiring) GetWebhookFromRequest(bodyBytes []byte, headers map[
 	}, nil
 }
 
-func (ms MonobankAcquiring) ConvertStatus(status string) models.PaymentStatus {
+func (ms MonobankAcquiring) ConvertStatus(status string) entities.PaymentStatus {
 	switch status {
 	case monobank.InvoiceStatusProcessing:
-		return models.PaymentStatusPending
+		return entities.PaymentStatusPending
 	case monobank.InvoiceStatusSuccess:
-		return models.PaymentStatusPaid
+		return entities.PaymentStatusPaid
 	default:
-		return models.PaymentStatusFailed
+		return entities.PaymentStatusFailed
 	}
 
 }

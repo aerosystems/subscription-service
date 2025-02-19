@@ -3,8 +3,7 @@ package usecases
 import (
 	"context"
 	"fmt"
-	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
-	"github.com/aerosystems/subscription-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/entities"
 	"github.com/google/uuid"
 	"time"
 )
@@ -19,8 +18,8 @@ func NewSubscriptionUsecase(subsRepo SubscriptionRepository) *SubscriptionUsecas
 	}
 }
 
-func NewSubscription(customerUuid uuid.UUID, subscriptionType models.SubscriptionType, subscriptionDuration models.SubscriptionDuration) *models.Subscription {
-	return &models.Subscription{
+func NewSubscription(customerUuid uuid.UUID, subscriptionType entities.SubscriptionType, subscriptionDuration entities.SubscriptionDuration) *entities.Subscription {
+	return &entities.Subscription{
 		Uuid:         uuid.New(),
 		CustomerUuid: customerUuid,
 		Type:         subscriptionType,
@@ -31,42 +30,42 @@ func NewSubscription(customerUuid uuid.UUID, subscriptionType models.Subscriptio
 	}
 }
 
-func (ss SubscriptionUsecase) CreateSubscription(customerUUID, subscriptionTypeStr, subscriptionDurationStr string) (*models.Subscription, error) {
+func (ss SubscriptionUsecase) CreateSubscription(ctx context.Context, customerUUID, subscriptionTypeStr, subscriptionDurationStr string) (*entities.Subscription, error) {
 	customerUuid, err := uuid.Parse(customerUUID)
 	if err != nil {
-		return nil, CustomErrors.ErrInvalidCustomerUuid
+		return nil, entities.ErrInvalidCustomerUuid
 	}
-	subscriptionType := models.SubscriptionTypeFromString(subscriptionTypeStr)
-	if subscriptionType == models.UnknownSubscriptionType {
-		return nil, CustomErrors.ErrInvalidSubscriptionType
+	subscriptionType := entities.SubscriptionTypeFromString(subscriptionTypeStr)
+	if subscriptionType == entities.UnknownSubscriptionType {
+		return nil, entities.ErrInvalidSubscriptionType
 	}
-	subscriptionDuration := models.SubscriptionDurationFromString(subscriptionDurationStr)
-	if subscriptionDuration == models.UnknownSubscriptionDuration {
-		return nil, CustomErrors.ErrInvalidSubscriptionDuration
+	subscriptionDuration := entities.SubscriptionDurationFromString(subscriptionDurationStr)
+	if subscriptionDuration == entities.UnknownSubscriptionDuration {
+		return nil, entities.ErrInvalidSubscriptionDuration
 	}
 	sub := NewSubscription(customerUuid, subscriptionType, subscriptionDuration)
-	if err := ss.subsRepo.Create(context.TODO(), sub); err != nil {
+	if err := ss.subsRepo.Create(ctx, sub); err != nil {
 		return nil, fmt.Errorf("could not create subscription: %w", err)
 	}
 	return sub, nil
 }
 
-func (ss SubscriptionUsecase) CreateFreeTrial(customerUUID string) (*models.Subscription, error) {
+func (ss SubscriptionUsecase) CreateFreeTrial(ctx context.Context, customerUUID string) (*entities.Subscription, error) {
 	customerUuid, err := uuid.Parse(customerUUID)
 	if err != nil {
-		return nil, CustomErrors.ErrInvalidCustomerUuid
+		return nil, entities.ErrInvalidCustomerUuid
 	}
-	sub := NewSubscription(customerUuid, models.TrialSubscriptionType, models.OneWeekSubscriptionDuration)
-	if err := ss.subsRepo.Create(context.TODO(), sub); err != nil {
+	sub := NewSubscription(customerUuid, entities.TrialSubscriptionType, entities.OneWeekSubscriptionDuration)
+	if err := ss.subsRepo.Create(ctx, sub); err != nil {
 		return nil, fmt.Errorf("could not create subscription: %w", err)
 	}
 	return sub, nil
 }
 
-func (ss SubscriptionUsecase) GetSubscription(customerUUID uuid.UUID) (*models.Subscription, error) {
-	return ss.subsRepo.GetByCustomerUuid(context.TODO(), customerUUID)
+func (ss SubscriptionUsecase) GetSubscription(ctx context.Context, customerUUID uuid.UUID) (*entities.Subscription, error) {
+	return ss.subsRepo.GetByCustomerUuid(ctx, customerUUID)
 }
 
-func (ss SubscriptionUsecase) DeleteSubscription(subscriptionUUID uuid.UUID) error {
-	return ss.subsRepo.Delete(context.TODO(), subscriptionUUID)
+func (ss SubscriptionUsecase) DeleteSubscription(ctx context.Context, subscriptionUUID uuid.UUID) error {
+	return ss.subsRepo.Delete(ctx, subscriptionUUID)
 }

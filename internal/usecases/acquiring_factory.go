@@ -2,13 +2,13 @@ package usecases
 
 import (
 	"errors"
-	"github.com/aerosystems/subscription-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/entities"
 )
 
 type UnknownAcquiring struct{}
 
-func (us UnknownAcquiring) GetPaymentMethod() models.PaymentMethod {
-	return models.UnknownPaymentMethod
+func (us UnknownAcquiring) GetPaymentMethod() entities.PaymentMethod {
+	return entities.UnknownPaymentMethod
 }
 
 func (us UnknownAcquiring) CreateInvoice(amount int, invoiceUuid, title, description string) (Invoice, error) {
