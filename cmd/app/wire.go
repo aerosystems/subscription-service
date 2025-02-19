@@ -17,8 +17,8 @@ import (
 	"github.com/aerosystems/subscription-service/internal/usecases"
 	"github.com/aerosystems/subscription-service/pkg/monobank"
 
+	"github.com/aerosystems/common-service/clients/gcpclient"
 	"github.com/aerosystems/common-service/logger"
-	"github.com/aerosystems/common-service/pkg/gcpclient"
 	"github.com/aerosystems/common-service/presenters/grpcserver"
 	"github.com/aerosystems/common-service/presenters/httpserver"
 )
