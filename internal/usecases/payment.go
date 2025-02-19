@@ -3,7 +3,7 @@ package usecases
 import (
 	"context"
 	"fmt"
-	"github.com/aerosystems/subscription-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/entities"
 	"github.com/google/uuid"
 	"time"
 )
@@ -13,17 +13,31 @@ const (
 )
 
 type PaymentUsecase struct {
-	acquiring   AcquiringOperations
-	invoiceRepo InvoiceRepository
-	priceRepo   PriceRepository
-	strategies  map[models.PaymentMethod]AcquiringOperations
+	invoiceRepo       InvoiceRepository
+	priceRepo         PriceRepository
+	acquiringRegistry map[entities.PaymentMethod]AcquiringOperations
 }
 
-func NewPaymentUsecase(invoiceRepo InvoiceRepository, priceRepo PriceRepository, strategies map[models.PaymentMethod]AcquiringOperations) *PaymentUsecase {
+func NewPaymentUsecase(invoiceRepo InvoiceRepository, priceRepo PriceRepository, operations ...AcquiringOperations) *PaymentUsecase {
+	if invoiceRepo == nil {
+		panic("invoiceRepo is required")
+	}
+	if priceRepo == nil {
+		panic("priceRepo is required")
+	}
+
+	registry := map[entities.PaymentMethod]AcquiringOperations{
+		entities.UnknownPaymentMethod: &UnknownAcquiring{},
+	}
+
+	for _, op := range operations {
+		registry[op.GetPaymentMethod()] = op
+	}
+
 	return &PaymentUsecase{
-		invoiceRepo: invoiceRepo,
-		priceRepo:   priceRepo,
-		strategies:  strategies,
+		invoiceRepo:       invoiceRepo,
+		priceRepo:         priceRepo,
+		acquiringRegistry: registry,
 	}
 }
 
@@ -39,36 +53,32 @@ type Webhook struct {
 }
 
 type AcquiringOperations interface {
-	GetPaymentMethod() models.PaymentMethod
+	GetPaymentMethod() entities.PaymentMethod
 	CreateInvoice(amount int, invoiceUuid, title, description string) (Invoice, error)
 	GetWebhookFromRequest(bodyBytes []byte, headers map[string][]string) (Webhook, error)
 }
 
-func (ps PaymentUsecase) SetPaymentMethod(paymentMethod models.PaymentMethod) error {
-	if _, ok := ps.strategies[paymentMethod]; !ok {
-		return fmt.Errorf("invalid payment method")
-	}
-	ps.acquiring = ps.strategies[paymentMethod]
-	return nil
-}
-
-func (ps PaymentUsecase) GetPaymentUrl(userUuid uuid.UUID, subscription models.SubscriptionType, duration models.SubscriptionDuration) (string, error) {
+func (ps PaymentUsecase) GetPaymentUrl(ctx context.Context, userUUID uuid.UUID, paymentMethod entities.PaymentMethod, subscription entities.SubscriptionType, duration entities.SubscriptionDuration) (string, error) {
 	amount, err := ps.priceRepo.GetPrice(subscription, duration)
 	if err != nil {
 		return "", err
 	}
 	invoiceUuid := uuid.New()
 	description := fmt.Sprintf("Subscription %s with %s payment", subscription.String(), duration.String())
-	invoice, err := ps.acquiring.CreateInvoice(amount, invoiceUuid.String(), titlePage, description)
+	acquiring, ok := ps.acquiringRegistry[paymentMethod]
+	if !ok {
+		return "", fmt.Errorf("unknown payment method %s", paymentMethod)
+	}
+	invoice, err := acquiring.CreateInvoice(amount, invoiceUuid.String(), titlePage, description)
 	if err != nil {
 		return "", err
 	}
-	if err := ps.invoiceRepo.Create(context.Background(), &models.Invoice{
-		CustomerUuid:       userUuid,
+	if err = ps.invoiceRepo.Create(ctx, &entities.Invoice{
+		CustomerUuid:       userUUID,
 		Amount:             amount,
 		InvoiceUuid:        invoiceUuid,
-		PaymentMethod:      ps.acquiring.GetPaymentMethod(),
-		PaymentStatus:      models.PaymentStatusCreated,
+		PaymentMethod:      acquiring.GetPaymentMethod(),
+		PaymentStatus:      entities.PaymentStatusCreated,
 		AcquiringInvoiceId: invoice.AcquiringInvoiceId,
 	}); err != nil {
 		return "", err
@@ -76,26 +86,30 @@ func (ps PaymentUsecase) GetPaymentUrl(userUuid uuid.UUID, subscription models.S
 	return invoice.AcquiringPageUrl, nil
 }
 
-func (ps PaymentUsecase) ProcessingWebhookPayment(bodyBytes []byte, headers map[string][]string) error {
-	webhook, err := ps.acquiring.GetWebhookFromRequest(bodyBytes, headers)
+func (ps PaymentUsecase) ProcessingWebhookPayment(ctx context.Context, paymentMethod entities.PaymentMethod, bodyBytes []byte, headers map[string][]string) error {
+	acquiring, ok := ps.acquiringRegistry[paymentMethod]
+	if !ok {
+		fmt.Errorf("unknown payment method %s", paymentMethod)
+	}
+	webhook, err := acquiring.GetWebhookFromRequest(bodyBytes, headers)
 	if err != nil {
 		return err
 	}
-	invoice, err := ps.invoiceRepo.GetByAcquiringInvoiceId(context.Background(), webhook.AcquiringInvoiceId)
+	invoice, err := ps.invoiceRepo.GetByAcquiringInvoiceId(ctx, webhook.AcquiringInvoiceId)
 	if err != nil {
 		return err
 	}
 	if invoice.UpdatedAt.After(webhook.ModifiedDate) { // to prevent not actual webhook
 		return nil
 	}
-	invoice.PaymentStatus = models.NewPaymentStatus(webhook.Status)
+	invoice.PaymentStatus = entities.NewPaymentStatus(webhook.Status)
 	invoice.UpdatedAt = webhook.ModifiedDate
-	if err := ps.invoiceRepo.Update(context.Background(), invoice); err != nil {
+	if err := ps.invoiceRepo.Update(ctx, invoice); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ps PaymentUsecase) GetPrices() map[models.SubscriptionType]map[models.SubscriptionDuration]int {
+func (ps PaymentUsecase) GetPrices(ctx context.Context) map[entities.SubscriptionType]map[entities.SubscriptionDuration]int {
 	return ps.priceRepo.GetAll()
 }

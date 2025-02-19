@@ -9,25 +9,16 @@ package main
 import (
 	"cloud.google.com/go/firestore"
 	"context"
-	"firebase.google.com/go/auth"
-	"github.com/aerosystems/subscription-service/internal/common/custom_errors"
-	"github.com/aerosystems/subscription-service/internal/config"
-	"github.com/aerosystems/subscription-service/internal/infrastructure/adapters/broker"
-	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/fire"
-	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/memory"
-	"github.com/aerosystems/subscription-service/internal/models"
-	"github.com/aerosystems/subscription-service/internal/presenters/http"
-	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers"
-	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers/payment"
-	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers/subscription"
-	"github.com/aerosystems/subscription-service/internal/presenters/http/middleware"
-	"github.com/aerosystems/subscription-service/internal/presenters/rpc"
+	"firebase.google.com/go/v4/auth"
+	"github.com/aerosystems/common-service/clients/gcpclient"
+	"github.com/aerosystems/common-service/logger"
+	"github.com/aerosystems/common-service/presenters/grpcserver"
+	"github.com/aerosystems/common-service/presenters/httpserver"
+	"github.com/aerosystems/subscription-service/internal/adapters"
+	"github.com/aerosystems/subscription-service/internal/ports/grpc"
+	"github.com/aerosystems/subscription-service/internal/ports/http"
 	"github.com/aerosystems/subscription-service/internal/usecases"
-	"github.com/aerosystems/subscription-service/pkg/firebase"
-	"github.com/aerosystems/subscription-service/pkg/logger"
 	"github.com/aerosystems/subscription-service/pkg/monobank"
-	"github.com/aerosystems/subscription-service/pkg/pubsub"
-	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
 
@@ -38,32 +29,26 @@ func InitApp() *App {
 	logger := ProvideLogger()
 	logrusLogger := ProvideLogrusLogger(logger)
 	config := ProvideConfig()
-	httpErrorHandler := ProvideCustomErrorHandler(config)
 	client := ProvideFirebaseAuthClient(config)
 	firebaseAuth := ProvideFirebaseAuthMiddleware(client)
-	serviceApiKeyAuth := ProvideXAPiKeyMiddleware(config)
-	baseHandler := ProvideBaseHandler(logrusLogger, config)
 	firestoreClient := ProvideFirestoreClient(config)
-	subscriptionRepo := ProvideSubscriptionRepo(firestoreClient)
-	pubSubClient := ProvidePubSubClient(config)
-	projectEventsAdapter := ProvideProjectEventsAdapter(pubSubClient, config)
-	subscriptionUsecase := ProvideSubscriptionUsecase(subscriptionRepo, projectEventsAdapter)
-	handler := ProvideSubscriptionHandler(baseHandler, subscriptionUsecase)
 	invoiceRepo := ProvideInvoiceRepo(firestoreClient)
 	priceRepo := ProvidePriceRepo()
 	acquiring := ProvideMonobankAcquiring(config)
-	monobankStrategy := ProvideMonobankStrategy(acquiring, config)
-	v := ProvidePaymentMap(monobankStrategy)
-	paymentUsecase := ProvidePaymentUsecase(invoiceRepo, priceRepo, v)
-	paymentHandler := ProvidePaymentHandler(baseHandler, paymentUsecase)
-	server := ProvideHttpServer(config, logrusLogger, httpErrorHandler, firebaseAuth, serviceApiKeyAuth, handler, paymentHandler)
-	rpcServerServer := ProvideRpcServer(logrusLogger, subscriptionUsecase)
-	app := ProvideApp(logrusLogger, config, server, rpcServerServer)
+	monobankAcquiring := ProvideMonobankStrategy(acquiring, config)
+	paymentUsecase := ProvidePaymentUsecase(invoiceRepo, priceRepo, monobankAcquiring)
+	subscriptionRepo := ProvideSubscriptionRepo(firestoreClient)
+	subscriptionUsecase := ProvideSubscriptionUsecase(subscriptionRepo)
+	handler := ProvideHandler(paymentUsecase, subscriptionUsecase)
+	server := ProvideHTTPServer(config, logrusLogger, firebaseAuth, handler)
+	subscriptionService := ProvideSubscriptionService(subscriptionUsecase)
+	grpcServerServer := ProvideGRPCServer(config, logrusLogger, subscriptionService)
+	app := ProvideApp(logrusLogger, config, server, grpcServerServer)
 	return app
 }
 
-func ProvideApp(log *logrus.Logger, cfg *config.Config, httpServer *HttpServer.Server, rpcServer *RpcServer.Server) *App {
-	app := NewApp(log, cfg, httpServer, rpcServer)
+func ProvideApp(log *logrus.Logger, cfg *Config, httpServer *HTTPServer.Server, gpcServer *GRPCServer.Server) *App {
+	app := NewApp(log, cfg, httpServer, gpcServer)
 	return app
 }
 
@@ -72,78 +57,77 @@ func ProvideLogger() *logger.Logger {
 	return loggerLogger
 }
 
-func ProvideConfig() *config.Config {
-	configConfig := config.NewConfig()
-	return configConfig
+func ProvideConfig() *Config {
+	config := NewConfig()
+	return config
 }
 
-func ProvideRpcServer(log *logrus.Logger, subscriptionUsecase RpcServer.SubscriptionUsecase) *RpcServer.Server {
-	server := RpcServer.NewServer(log, subscriptionUsecase)
-	return server
-}
-
-func ProvidePaymentHandler(baseHandler *handlers.BaseHandler, paymentUsecase handlers.PaymentUsecase) *payment.Handler {
-	handler := payment.NewPaymentHandler(baseHandler, paymentUsecase)
+func ProvideHandler(paymentUsecase HTTPServer.PaymentUsecase, subscriptionUsecase HTTPServer.SubscriptionUsecase) *HTTPServer.Handler {
+	handler := HTTPServer.NewHandler(subscriptionUsecase, paymentUsecase)
 	return handler
 }
 
-func ProvideSubscriptionHandler(baseHandler *handlers.BaseHandler, subscriptionUsecase handlers.SubscriptionUsecase) *subscription.Handler {
-	handler := subscription.NewSubscriptionHandler(baseHandler, subscriptionUsecase)
-	return handler
+func ProvideSubscriptionService(subscriptionUsecase GRPCServer.SubscriptionUsecase) *GRPCServer.SubscriptionService {
+	subscriptionService := GRPCServer.NewSubscriptionService(subscriptionUsecase)
+	return subscriptionService
 }
 
-func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo usecases.PriceRepository, strategies map[models.PaymentMethod]usecases.AcquiringOperations) *usecases.PaymentUsecase {
-	paymentUsecase := usecases.NewPaymentUsecase(invoiceRepo, priceRepo, strategies)
-	return paymentUsecase
-}
-
-func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository, projectAdapter usecases.ProjectAdapter) *usecases.SubscriptionUsecase {
-	subscriptionUsecase := usecases.NewSubscriptionUsecase(subscriptionRepo, projectAdapter)
+func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository) *usecases.SubscriptionUsecase {
+	subscriptionUsecase := usecases.NewSubscriptionUsecase(subscriptionRepo)
 	return subscriptionUsecase
 }
 
-func ProvidePriceRepo() *memory.PriceRepo {
-	priceRepo := memory.NewPriceRepo()
+func ProvidePriceRepo() *adapters.PriceRepo {
+	priceRepo := adapters.NewPriceRepo()
 	return priceRepo
 }
 
-func ProvideSubscriptionRepo(client *firestore.Client) *fire.SubscriptionRepo {
-	subscriptionRepo := fire.NewSubscriptionRepo(client)
+func ProvideSubscriptionRepo(client *firestore.Client) *adapters.SubscriptionRepo {
+	subscriptionRepo := adapters.NewSubscriptionRepo(client)
 	return subscriptionRepo
 }
 
-func ProvideInvoiceRepo(client *firestore.Client) *fire.InvoiceRepo {
-	invoiceRepo := fire.NewInvoiceRepo(client)
+func ProvideInvoiceRepo(client *firestore.Client) *adapters.InvoiceRepo {
+	invoiceRepo := adapters.NewInvoiceRepo(client)
 	return invoiceRepo
 }
 
 // wire.go:
 
-func ProvideHttpServer(cfg *config.Config, log *logrus.Logger, errorHandler *echo.HTTPErrorHandler, firebaseAuthMiddleware *middleware.FirebaseAuth, xApiKeyAuthMiddleware *middleware.ServiceApiKeyAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
-	return HttpServer.NewServer(cfg.WebPort, log, errorHandler, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
+func ProvideHTTPServer(cfg *Config, log *logrus.Logger, firebaseAuth *HTTPServer.FirebaseAuth, handler *HTTPServer.Handler) *HTTPServer.Server {
+	return HTTPServer.NewHTTPServer(&HTTPServer.Config{
+		Config: httpserver.Config{
+			Host: cfg.Host,
+			Port: cfg.Port,
+		},
+		Mode: cfg.Mode,
+	}, log, firebaseAuth, handler)
+}
+
+func ProvideGRPCServer(cfg *Config, log *logrus.Logger, subscriptionService *GRPCServer.SubscriptionService) *GRPCServer.Server {
+	return GRPCServer.NewGRPCServer(&grpcserver.Config{
+		Host: cfg.Host,
+		Port: cfg.Port,
+	}, log, subscriptionService)
 }
 
 func ProvideLogrusLogger(log *logger.Logger) *logrus.Logger {
 	return log.Logger
 }
 
-func ProvideBaseHandler(log *logrus.Logger, cfg *config.Config) *handlers.BaseHandler {
-	return handlers.NewBaseHandler(log, cfg.Mode)
+func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo usecases.PriceRepository, monobankStrategy usecases.AcquiringOperations) *usecases.PaymentUsecase {
+	return usecases.NewPaymentUsecase(invoiceRepo, priceRepo, monobankStrategy)
 }
 
-func ProvidePaymentMap(monobankStrategy *usecases.MonobankStrategy) map[models.PaymentMethod]usecases.AcquiringOperations {
-	return map[models.PaymentMethod]usecases.AcquiringOperations{models.MonobankPaymentMethod: monobankStrategy}
+func ProvideMonobankStrategy(acquiring *monobank.Acquiring, cfg *Config) *usecases.MonobankAcquiring {
+	return usecases.NewMonobankAcquiring(acquiring, cfg.MonobankRedirectUrl, cfg.MonobankWebHookUrl, monobank.USD)
 }
 
-func ProvideMonobankStrategy(acquiring *monobank.Acquiring, cfg *config.Config) *usecases.MonobankStrategy {
-	return usecases.NewMonobankStrategy(acquiring, cfg.MonobankRedirectUrl, cfg.MonobankWebHookUrl, monobank.USD)
-}
-
-func ProvideMonobankAcquiring(cfg *config.Config) *monobank.Acquiring {
+func ProvideMonobankAcquiring(cfg *Config) *monobank.Acquiring {
 	return monobank.NewAcquiring(cfg.MonobankToken)
 }
 
-func ProvideFirestoreClient(cfg *config.Config) *firestore.Client {
+func ProvideFirestoreClient(cfg *Config) *firestore.Client {
 	ctx := context.Background()
 	client, err := firestore.NewClient(ctx, cfg.GcpProjectId)
 	if err != nil {
@@ -152,39 +136,14 @@ func ProvideFirestoreClient(cfg *config.Config) *firestore.Client {
 	return client
 }
 
-func ProvideFirebaseAuthMiddleware(client *auth.Client) *middleware.FirebaseAuth {
-	return middleware.NewFirebaseAuth(client)
-}
-
-func ProvideXAPiKeyMiddleware(cfg *config.Config) *middleware.ServiceApiKeyAuth {
-	xApiKeyAuthMiddleware, err := middleware.NewServiceApiKeyAuth(cfg.ApiKey)
-	if err != nil {
-		panic(err)
-	}
-	return xApiKeyAuthMiddleware
-}
-
-func ProvideFirebaseAuthClient(cfg *config.Config) *auth.Client {
-	app, err := firebaseApp.NewApp(cfg.GcpProjectId, cfg.GoogleApplicationCredentials)
-	if err != nil {
-		panic(err)
-	}
-	return app.Client
-}
-
-func ProvidePubSubClient(cfg *config.Config) *PubSub.Client {
-	client, err := PubSub.NewClientWithAuth(cfg.GoogleApplicationCredentials)
+func ProvideFirebaseAuthClient(cfg *Config) *auth.Client {
+	client, err := gcpclient.NewFirebaseClient(cfg.GcpProjectId, cfg.GoogleApplicationCredentials)
 	if err != nil {
 		panic(err)
 	}
 	return client
 }
 
-func ProvideProjectEventsAdapter(pubSubClient *PubSub.Client, cfg *config.Config) *broker.ProjectEventsAdapter {
-	return broker.NewProjectEventsAdapter(pubSubClient, cfg.ProjectTopicId, cfg.ProjectSubName, cfg.ProjectCreateEndpoint, cfg.ProjectServiceApiKey)
-}
-
-func ProvideCustomErrorHandler(cfg *config.Config) *echo.HTTPErrorHandler {
-	errorHandler := CustomErrors.NewEchoErrorHandler(cfg.Mode)
-	return &errorHandler
+func ProvideFirebaseAuthMiddleware(client *auth.Client) *HTTPServer.FirebaseAuth {
+	return HTTPServer.NewFirebaseAuth(client)
 }

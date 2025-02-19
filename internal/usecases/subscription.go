@@ -3,26 +3,23 @@ package usecases
 import (
 	"context"
 	"fmt"
-	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
-	"github.com/aerosystems/subscription-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/entities"
 	"github.com/google/uuid"
 	"time"
 )
 
 type SubscriptionUsecase struct {
-	subsRepo       SubscriptionRepository
-	projectAdapter ProjectAdapter
+	subsRepo SubscriptionRepository
 }
 
-func NewSubscriptionUsecase(subsRepo SubscriptionRepository, projectAdapter ProjectAdapter) *SubscriptionUsecase {
+func NewSubscriptionUsecase(subsRepo SubscriptionRepository) *SubscriptionUsecase {
 	return &SubscriptionUsecase{
-		subsRepo:       subsRepo,
-		projectAdapter: projectAdapter,
+		subsRepo: subsRepo,
 	}
 }
 
-func NewSubscription(customerUuid uuid.UUID, subscriptionType models.SubscriptionType, subscriptionDuration models.SubscriptionDuration) *models.Subscription {
-	return &models.Subscription{
+func NewSubscription(customerUuid uuid.UUID, subscriptionType entities.SubscriptionType, subscriptionDuration entities.SubscriptionDuration) *entities.Subscription {
+	return &entities.Subscription{
 		Uuid:         uuid.New(),
 		CustomerUuid: customerUuid,
 		Type:         subscriptionType,
@@ -33,54 +30,42 @@ func NewSubscription(customerUuid uuid.UUID, subscriptionType models.Subscriptio
 	}
 }
 
-func (ss SubscriptionUsecase) CreateSubscription(customerUuidStr, subscriptionTypeStr, subscriptionDurationStr string) (*models.Subscription, error) {
-	customerUuid, err := uuid.Parse(customerUuidStr)
+func (ss SubscriptionUsecase) CreateSubscription(ctx context.Context, customerUUID, subscriptionTypeStr, subscriptionDurationStr string) (*entities.Subscription, error) {
+	customerUuid, err := uuid.Parse(customerUUID)
 	if err != nil {
-		return nil, CustomErrors.ErrInvalidCustomerUuid
+		return nil, entities.ErrInvalidCustomerUuid
 	}
-	subscriptionType := models.SubscriptionTypeFromString(subscriptionTypeStr)
-	if subscriptionType == models.UnknownSubscriptionType {
-		return nil, CustomErrors.ErrInvalidSubscriptionType
+	subscriptionType := entities.SubscriptionTypeFromString(subscriptionTypeStr)
+	if subscriptionType == entities.UnknownSubscriptionType {
+		return nil, entities.ErrInvalidSubscriptionType
 	}
-	subscriptionDuration := models.SubscriptionDurationFromString(subscriptionDurationStr)
-	if subscriptionDuration == models.UnknownSubscriptionDuration {
-		return nil, CustomErrors.ErrInvalidSubscriptionDuration
+	subscriptionDuration := entities.SubscriptionDurationFromString(subscriptionDurationStr)
+	if subscriptionDuration == entities.UnknownSubscriptionDuration {
+		return nil, entities.ErrInvalidSubscriptionDuration
 	}
 	sub := NewSubscription(customerUuid, subscriptionType, subscriptionDuration)
-	ctx := context.Background()
 	if err := ss.subsRepo.Create(ctx, sub); err != nil {
 		return nil, fmt.Errorf("could not create subscription: %w", err)
 	}
 	return sub, nil
 }
 
-func (ss SubscriptionUsecase) CreateFreeTrial(customerUuidStr string) (*models.Subscription, error) {
-	customerUuid, err := uuid.Parse(customerUuidStr)
+func (ss SubscriptionUsecase) CreateFreeTrial(ctx context.Context, customerUUID string) (*entities.Subscription, error) {
+	customerUuid, err := uuid.Parse(customerUUID)
 	if err != nil {
-		return nil, CustomErrors.ErrInvalidCustomerUuid
+		return nil, entities.ErrInvalidCustomerUuid
 	}
-	sub := NewSubscription(customerUuid, models.TrialSubscriptionType, models.OneWeekSubscriptionDuration)
-	ctx := context.Background()
+	sub := NewSubscription(customerUuid, entities.TrialSubscriptionType, entities.OneWeekSubscriptionDuration)
 	if err := ss.subsRepo.Create(ctx, sub); err != nil {
 		return nil, fmt.Errorf("could not create subscription: %w", err)
-	}
-	if err := ss.projectAdapter.PublishCreateProjectEvent(sub.Uuid, sub.Type, sub.AccessTime); err != nil {
-		return nil, fmt.Errorf("could not publish create project event: %w", err)
 	}
 	return sub, nil
 }
 
-func (ss SubscriptionUsecase) GetSubscription(customerUuid uuid.UUID) (*models.Subscription, error) {
-	ctx := context.Background()
-	return ss.subsRepo.GetByCustomerUuid(ctx, customerUuid)
+func (ss SubscriptionUsecase) GetSubscription(ctx context.Context, customerUUID uuid.UUID) (*entities.Subscription, error) {
+	return ss.subsRepo.GetByCustomerUuid(ctx, customerUUID)
 }
 
-func (ss SubscriptionUsecase) DeleteSubscription(customerUuid uuid.UUID) error {
-	ctx := context.Background()
-	sub, err := ss.subsRepo.GetByCustomerUuid(ctx, customerUuid)
-	if err != nil {
-		return err
-	}
-	ctx = context.Background()
-	return ss.subsRepo.Delete(ctx, sub)
+func (ss SubscriptionUsecase) DeleteSubscription(ctx context.Context, subscriptionUUID uuid.UUID) error {
+	return ss.subsRepo.Delete(ctx, subscriptionUUID)
 }

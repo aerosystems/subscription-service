@@ -4,52 +4,43 @@
 package main
 
 import (
-	"cloud.google.com/go/firestore"
 	"context"
-	"firebase.google.com/go/auth"
-	CustomErrors "github.com/aerosystems/subscription-service/internal/common/custom_errors"
-	"github.com/aerosystems/subscription-service/internal/config"
-	"github.com/aerosystems/subscription-service/internal/infrastructure/adapters/broker"
-	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/fire"
-	"github.com/aerosystems/subscription-service/internal/infrastructure/repository/memory"
-	"github.com/aerosystems/subscription-service/internal/models"
-	HttpServer "github.com/aerosystems/subscription-service/internal/presenters/http"
-	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers"
-	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers/payment"
-	"github.com/aerosystems/subscription-service/internal/presenters/http/handlers/subscription"
-	"github.com/aerosystems/subscription-service/internal/presenters/http/middleware"
-	RpcServer "github.com/aerosystems/subscription-service/internal/presenters/rpc"
-	"github.com/aerosystems/subscription-service/internal/usecases"
-	"github.com/aerosystems/subscription-service/pkg/firebase"
-	"github.com/aerosystems/subscription-service/pkg/logger"
-	"github.com/aerosystems/subscription-service/pkg/monobank"
-	"github.com/aerosystems/subscription-service/pkg/pubsub"
+
+	"cloud.google.com/go/firestore"
+	"firebase.google.com/go/v4/auth"
 	"github.com/google/wire"
-	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
+
+	"github.com/aerosystems/subscription-service/internal/adapters"
+	GRPCServer "github.com/aerosystems/subscription-service/internal/ports/grpc"
+	HTTPServer "github.com/aerosystems/subscription-service/internal/ports/http"
+	"github.com/aerosystems/subscription-service/internal/usecases"
+	"github.com/aerosystems/subscription-service/pkg/monobank"
+
+	"github.com/aerosystems/common-service/clients/gcpclient"
+	"github.com/aerosystems/common-service/logger"
+	"github.com/aerosystems/common-service/presenters/grpcserver"
+	"github.com/aerosystems/common-service/presenters/httpserver"
 )
 
 //go:generate wire
 func InitApp() *App {
 	panic(wire.Build(
-		wire.Bind(new(RpcServer.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
-		wire.Bind(new(handlers.PaymentUsecase), new(*usecases.PaymentUsecase)),
-		wire.Bind(new(handlers.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
-		wire.Bind(new(usecases.SubscriptionRepository), new(*fire.SubscriptionRepo)),
-		wire.Bind(new(usecases.InvoiceRepository), new(*fire.InvoiceRepo)),
-		wire.Bind(new(usecases.PriceRepository), new(*memory.PriceRepo)),
-		wire.Bind(new(usecases.ProjectAdapter), new(*broker.ProjectEventsAdapter)),
+		wire.Bind(new(GRPCServer.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
+		wire.Bind(new(HTTPServer.PaymentUsecase), new(*usecases.PaymentUsecase)),
+		wire.Bind(new(HTTPServer.SubscriptionUsecase), new(*usecases.SubscriptionUsecase)),
+		wire.Bind(new(usecases.SubscriptionRepository), new(*adapters.SubscriptionRepo)),
+		wire.Bind(new(usecases.InvoiceRepository), new(*adapters.InvoiceRepo)),
+		wire.Bind(new(usecases.PriceRepository), new(*adapters.PriceRepo)),
+		wire.Bind(new(usecases.AcquiringOperations), new(*usecases.MonobankAcquiring)),
 		ProvideApp,
 		ProvideLogger,
 		ProvideConfig,
-		ProvideHttpServer,
-		ProvideRpcServer,
+		ProvideHTTPServer,
+		ProvideGRPCServer,
 		ProvideLogrusLogger,
-		ProvideBaseHandler,
-		ProvidePaymentHandler,
-		ProvideSubscriptionHandler,
+		ProvideHandler,
 		ProvidePaymentUsecase,
-		ProvidePaymentMap,
 		ProvideMonobankStrategy,
 		ProvideMonobankAcquiring,
 		ProvideSubscriptionUsecase,
@@ -59,15 +50,12 @@ func InitApp() *App {
 		ProvideFirebaseAuthMiddleware,
 		ProvideFirebaseAuthClient,
 		ProvideInvoiceRepo,
-		ProvideXAPiKeyMiddleware,
-		ProvidePubSubClient,
-		ProvideProjectEventsAdapter,
-		ProvideCustomErrorHandler,
+		ProvideSubscriptionService,
 	),
 	)
 }
 
-func ProvideApp(log *logrus.Logger, cfg *config.Config, httpServer *HttpServer.Server, rpcServer *RpcServer.Server) *App {
+func ProvideApp(log *logrus.Logger, cfg *Config, httpServer *HTTPServer.Server, gpcServer *GRPCServer.Server) *App {
 	panic(wire.Build(NewApp))
 }
 
@@ -75,61 +63,60 @@ func ProvideLogger() *logger.Logger {
 	panic(wire.Build(logger.NewLogger))
 }
 
-func ProvideConfig() *config.Config {
-	panic(wire.Build(config.NewConfig))
+func ProvideConfig() *Config {
+	panic(wire.Build(NewConfig))
 }
 
-func ProvideHttpServer(cfg *config.Config, log *logrus.Logger, errorHandler *echo.HTTPErrorHandler, firebaseAuthMiddleware *middleware.FirebaseAuth, xApiKeyAuthMiddleware *middleware.ServiceApiKeyAuth, subscriptionHandler *subscription.Handler, paymentHandler *payment.Handler) *HttpServer.Server {
-	return HttpServer.NewServer(cfg.WebPort, log, errorHandler, firebaseAuthMiddleware, xApiKeyAuthMiddleware, subscriptionHandler, paymentHandler)
+func ProvideHTTPServer(cfg *Config, log *logrus.Logger, firebaseAuth *HTTPServer.FirebaseAuth, handler *HTTPServer.Handler) *HTTPServer.Server {
+	return HTTPServer.NewHTTPServer(&HTTPServer.Config{
+		Config: httpserver.Config{
+			Host: cfg.Host,
+			Port: cfg.Port,
+		},
+		Mode: cfg.Mode,
+	}, log, firebaseAuth, handler)
 }
 
-func ProvideRpcServer(log *logrus.Logger, subscriptionUsecase RpcServer.SubscriptionUsecase) *RpcServer.Server {
-	panic(wire.Build(RpcServer.NewServer))
+func ProvideGRPCServer(cfg *Config, log *logrus.Logger, subscriptionService *GRPCServer.SubscriptionService) *GRPCServer.Server {
+	return GRPCServer.NewGRPCServer(&grpcserver.Config{
+		Host: cfg.Host,
+		Port: cfg.Port,
+	}, log, subscriptionService)
 }
 
 func ProvideLogrusLogger(log *logger.Logger) *logrus.Logger {
 	return log.Logger
 }
 
-func ProvideBaseHandler(log *logrus.Logger, cfg *config.Config) *handlers.BaseHandler {
-	return handlers.NewBaseHandler(log, cfg.Mode)
+func ProvideHandler(paymentUsecase HTTPServer.PaymentUsecase, subscriptionUsecase HTTPServer.SubscriptionUsecase) *HTTPServer.Handler {
+	panic(wire.Build(HTTPServer.NewHandler))
 }
 
-func ProvidePaymentHandler(baseHandler *handlers.BaseHandler, paymentUsecase handlers.PaymentUsecase) *payment.Handler {
-	panic(wire.Build(payment.NewPaymentHandler))
+func ProvideSubscriptionService(subscriptionUsecase GRPCServer.SubscriptionUsecase) *GRPCServer.SubscriptionService {
+	panic(wire.Build(GRPCServer.NewSubscriptionService))
 }
 
-func ProvideSubscriptionHandler(baseHandler *handlers.BaseHandler, subscriptionUsecase handlers.SubscriptionUsecase) *subscription.Handler {
-	panic(wire.Build(subscription.NewSubscriptionHandler))
+func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo usecases.PriceRepository, monobankStrategy usecases.AcquiringOperations) *usecases.PaymentUsecase {
+	return usecases.NewPaymentUsecase(invoiceRepo, priceRepo, monobankStrategy)
 }
 
-func ProvidePaymentUsecase(invoiceRepo usecases.InvoiceRepository, priceRepo usecases.PriceRepository, strategies map[models.PaymentMethod]usecases.AcquiringOperations) *usecases.PaymentUsecase {
-	panic(wire.Build(usecases.NewPaymentUsecase))
+func ProvideMonobankStrategy(acquiring *monobank.Acquiring, cfg *Config) *usecases.MonobankAcquiring {
+	return usecases.NewMonobankAcquiring(acquiring, cfg.MonobankRedirectUrl, cfg.MonobankWebHookUrl, monobank.USD)
 }
 
-func ProvidePaymentMap(monobankStrategy *usecases.MonobankStrategy) map[models.PaymentMethod]usecases.AcquiringOperations {
-	return map[models.PaymentMethod]usecases.AcquiringOperations{
-		models.MonobankPaymentMethod: monobankStrategy,
-	}
-}
-
-func ProvideMonobankStrategy(acquiring *monobank.Acquiring, cfg *config.Config) *usecases.MonobankStrategy {
-	return usecases.NewMonobankStrategy(acquiring, cfg.MonobankRedirectUrl, cfg.MonobankWebHookUrl, monobank.USD)
-}
-
-func ProvideMonobankAcquiring(cfg *config.Config) *monobank.Acquiring {
+func ProvideMonobankAcquiring(cfg *Config) *monobank.Acquiring {
 	return monobank.NewAcquiring(cfg.MonobankToken)
 }
 
-func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository, projectAdapter usecases.ProjectAdapter) *usecases.SubscriptionUsecase {
+func ProvideSubscriptionUsecase(subscriptionRepo usecases.SubscriptionRepository) *usecases.SubscriptionUsecase {
 	panic(wire.Build(usecases.NewSubscriptionUsecase))
 }
 
-func ProvidePriceRepo() *memory.PriceRepo {
-	panic(wire.Build(memory.NewPriceRepo))
+func ProvidePriceRepo() *adapters.PriceRepo {
+	panic(wire.Build(adapters.NewPriceRepo))
 }
 
-func ProvideFirestoreClient(cfg *config.Config) *firestore.Client {
+func ProvideFirestoreClient(cfg *Config) *firestore.Client {
 	ctx := context.Background()
 	client, err := firestore.NewClient(ctx, cfg.GcpProjectId)
 	if err != nil {
@@ -138,47 +125,22 @@ func ProvideFirestoreClient(cfg *config.Config) *firestore.Client {
 	return client
 }
 
-func ProvideSubscriptionRepo(client *firestore.Client) *fire.SubscriptionRepo {
-	panic(wire.Build(fire.NewSubscriptionRepo))
+func ProvideSubscriptionRepo(client *firestore.Client) *adapters.SubscriptionRepo {
+	panic(wire.Build(adapters.NewSubscriptionRepo))
 }
 
-func ProvideInvoiceRepo(client *firestore.Client) *fire.InvoiceRepo {
-	panic(wire.Build(fire.NewInvoiceRepo))
+func ProvideInvoiceRepo(client *firestore.Client) *adapters.InvoiceRepo {
+	panic(wire.Build(adapters.NewInvoiceRepo))
 }
 
-func ProvideFirebaseAuthMiddleware(client *auth.Client) *middleware.FirebaseAuth {
-	return middleware.NewFirebaseAuth(client)
-}
-
-func ProvideXAPiKeyMiddleware(cfg *config.Config) *middleware.ServiceApiKeyAuth {
-	xApiKeyAuthMiddleware, err := middleware.NewServiceApiKeyAuth(cfg.ApiKey)
-	if err != nil {
-		panic(err)
-	}
-	return xApiKeyAuthMiddleware
-}
-
-func ProvideFirebaseAuthClient(cfg *config.Config) *auth.Client {
-	app, err := firebaseApp.NewApp(cfg.GcpProjectId, cfg.GoogleApplicationCredentials)
-	if err != nil {
-		panic(err)
-	}
-	return app.Client
-}
-
-func ProvidePubSubClient(cfg *config.Config) *PubSub.Client {
-	client, err := PubSub.NewClientWithAuth(cfg.GoogleApplicationCredentials)
+func ProvideFirebaseAuthClient(cfg *Config) *auth.Client {
+	client, err := gcpclient.NewFirebaseClient(cfg.GcpProjectId, cfg.GoogleApplicationCredentials)
 	if err != nil {
 		panic(err)
 	}
 	return client
 }
 
-func ProvideProjectEventsAdapter(pubSubClient *PubSub.Client, cfg *config.Config) *broker.ProjectEventsAdapter {
-	return broker.NewProjectEventsAdapter(pubSubClient, cfg.ProjectTopicId, cfg.ProjectSubName, cfg.ProjectCreateEndpoint, cfg.ProjectServiceApiKey)
-}
-
-func ProvideCustomErrorHandler(cfg *config.Config) *echo.HTTPErrorHandler {
-	errorHandler := CustomErrors.NewEchoErrorHandler(cfg.Mode)
-	return &errorHandler
+func ProvideFirebaseAuthMiddleware(client *auth.Client) *HTTPServer.FirebaseAuth {
+	return HTTPServer.NewFirebaseAuth(client)
 }

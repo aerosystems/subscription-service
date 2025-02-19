@@ -2,29 +2,24 @@ package usecases
 
 import (
 	"context"
-	"github.com/aerosystems/subscription-service/internal/models"
+	"github.com/aerosystems/subscription-service/internal/entities"
 	"github.com/google/uuid"
-	"time"
 )
 
 type InvoiceRepository interface {
-	Create(ctx context.Context, invoice *models.Invoice) error
-	GetByAcquiringInvoiceId(ctx context.Context, acquiringInvoiceId string) (*models.Invoice, error)
-	Update(ctx context.Context, invoice *models.Invoice) error
+	Create(ctx context.Context, invoice *entities.Invoice) error
+	GetByAcquiringInvoiceId(ctx context.Context, acquiringInvoiceId string) (*entities.Invoice, error)
+	Update(ctx context.Context, invoice *entities.Invoice) error
 }
 
 type SubscriptionRepository interface {
-	Create(ctx context.Context, subscription *models.Subscription) error
-	GetByCustomerUuid(ctx context.Context, userUuid uuid.UUID) (*models.Subscription, error)
-	Update(ctx context.Context, subscription *models.Subscription) error
-	Delete(ctx context.Context, subscription *models.Subscription) error
+	Create(ctx context.Context, subscription *entities.Subscription) error
+	GetByCustomerUuid(ctx context.Context, userUuid uuid.UUID) (*entities.Subscription, error)
+	Update(ctx context.Context, subscription *entities.Subscription) error
+	Delete(ctx context.Context, subscriptionUUID uuid.UUID) error
 }
 
 type PriceRepository interface {
-	GetPrice(kindSubscription models.SubscriptionType, durationSubscription models.SubscriptionDuration) (int, error)
-	GetAll() map[models.SubscriptionType]map[models.SubscriptionDuration]int
-}
-
-type ProjectAdapter interface {
-	PublishCreateProjectEvent(customerUuid uuid.UUID, subscriptionType models.SubscriptionType, accessTime time.Time) error
+	GetPrice(subscriptionType entities.SubscriptionType, subscriptionDuration entities.SubscriptionDuration) (int, error)
+	GetAll() map[entities.SubscriptionType]map[entities.SubscriptionDuration]int
 }
